@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
   <title>لوحة التحكم – MH MANWIR</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,7 +12,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <style>
-    /* ===== RESET & ROOT (نفس الأنماط السابقة، مختصرة للتوفير) ===== */
+    /* ===== RESET & ROOT ===== */
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     :root {
       --black: #000; --bg: #0c0c0c; --panel: #131313; --panel2: #1a1a1a;
@@ -28,8 +28,15 @@
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: #111; }
     ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-    /* ===== SIDEBAR, MAIN, TOPBAR, CARDS, ETC... (نفس السابق) ===== */
-    .sidebar { position: fixed; top:0; right:0; width:240px; height:100vh; background:var(--panel); border-left:1px solid var(--border); display:flex; flex-direction:column; z-index:100; overflow-y:auto; }
+
+    /* ===== SIDEBAR DRAWER (للهواتف) ===== */
+    .sidebar {
+      position: fixed; top:0; right:0; width:260px; height:100vh;
+      background: var(--panel); border-left:1px solid var(--border);
+      display: flex; flex-direction: column; z-index: 1000;
+      transform: translateX(0%); transition: transform 0.3s ease;
+      overflow-y: auto;
+    }
     .sidebar-logo { padding:28px 20px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
     .sidebar-logo-icon { width:38px; height:38px; background:var(--gold); border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-weight:700; font-size:13px; color:#000; }
     .sidebar-logo-name { font-family:'Oswald',sans-serif; font-size:16px; font-weight:700; letter-spacing:2px; font-style:italic; color:var(--white); }
@@ -42,13 +49,44 @@
     .nav-item.active { color:var(--gold); background:rgba(201,168,76,0.08); border-right-color:var(--gold); }
     .nav-badge { margin-right:auto; background:var(--red); color:white; font-size:10px; font-weight:900; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
     .sidebar-footer { padding:16px 20px; border-top:1px solid var(--border); font-size:11px; color:var(--gray); }
-    .main { margin-right:240px; min-height:100vh; display:flex; flex-direction:column; }
-    .topbar { height:64px; background:var(--panel); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 30px; position:sticky; top:0; z-index:50; }
+    
+    /* زر الهامبرغر */
+    .hamburger {
+      display: none; background: none; border: none; color: var(--white);
+      font-size: 24px; cursor: pointer; margin-left: 16px;
+    }
+    /* عند عرض الشاشة <= 900px نخفي السايدبار ونظهر الهامبرغر ونحول السايدبار لـ drawer */
+    @media (max-width: 900px) {
+      .hamburger { display: block; }
+      .sidebar {
+        transform: translateX(100%);
+        box-shadow: none;
+      }
+      .sidebar.open {
+        transform: translateX(0%);
+        box-shadow: 0 0 20px rgba(0,0,0,0.8);
+      }
+      .main { margin-right: 0; }
+      .overlay-blur {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(2px); z-index: 900; display: none;
+      }
+      .overlay-blur.active { display: block; }
+    }
+    @media (min-width: 901px) {
+      .main { margin-right: 260px; }
+      .sidebar { transform: translateX(0) !important; }
+      .overlay-blur { display: none !important; }
+      .hamburger { display: none; }
+    }
+    
+    .main { min-height: 100vh; display: flex; flex-direction: column; transition: margin-right 0.3s; }
+    .topbar { height: 64px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; position: sticky; top: 0; z-index: 100; }
     .topbar-title { font-family:'Oswald',sans-serif; font-size:18px; font-weight:700; letter-spacing:2px; color:var(--white); }
     .status-dot { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); animation:pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
-    .status-text { font-size:12px; color:var(--gray); font-weight:600; }
-    .page-content { flex:1; padding:30px; }
+    .status-text { font-size:12px; color:var(--gray); font-weight:600; margin-right: 8px; }
+    .page-content { flex:1; padding: 20px; }
     .section { display:none; }
     .section.active { display:block; }
     .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; flex-wrap:wrap; gap:12px; }
@@ -114,44 +152,76 @@
     .empty-state i { font-size:40px; color:var(--border); margin-bottom:14px; }
     .toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--panel); border:1px solid var(--border); color:var(--white); padding:12px 22px; border-radius:50px; font-size:13px; font-weight:700; display:flex; align-items:center; gap:10px; z-index:9999; opacity:0; transition:all 0.3s; pointer-events:none; white-space:nowrap; box-shadow:var(--shadow); }
     .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
-    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(6px); z-index:500; display:none; align-items:center; justify-content:center; padding:20px; }
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(6px); z-index:2000; display:none; align-items:center; justify-content:center; padding:20px; }
     .modal-overlay.open { display:flex; }
     .modal-box { background:var(--panel); border:1px solid var(--border); border-radius:20px; padding:28px; max-width:400px; width:100%; box-shadow:var(--shadow); }
     .modal-box h3 { font-size:18px; font-weight:900; margin-bottom:10px; }
     .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
-    @media (max-width:900px) { .sidebar { width:60px; } .sidebar-logo-name, .sidebar-logo-sub, .nav-section-title, .nav-item span { display:none; } .main { margin-right:60px; } }
-    @media (max-width:600px) { .sidebar { display:none; } .main { margin-right:0; } .mobile-nav { display:flex; } .form-grid { grid-template-columns:1fr; } }
-    .mobile-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:var(--panel); border-top:1px solid var(--border); z-index:200; height:62px; align-items:stretch; }
-    .mobile-nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:var(--gray); font-size:10px; font-weight:700; cursor:pointer; }
-    .mobile-nav-item.active { color:var(--gold); }
-    .mobile-nav-badge { position:absolute; top:6px; right:22%; background:var(--red); color:white; font-size:9px; font-weight:900; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+    
+    /* شاشة تسجيل الدخول */
+    .login-overlay {
+      position: fixed; inset: 0; background: var(--bg); z-index: 3000;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(8px);
+    }
+    .login-card {
+      background: var(--panel); border: 1px solid var(--gold); border-radius: 32px;
+      padding: 32px 28px; width: 340px; max-width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 35px rgba(0,0,0,0.5);
+    }
+    .login-card h2 { font-family: 'Oswald',sans-serif; color: var(--gold); margin-bottom: 6px; }
+    .login-card p { color: var(--gray); font-size: 13px; margin-bottom: 28px; }
+    .login-card input {
+      width: 100%; background: var(--panel2); border: 1.5px solid var(--border);
+      padding: 12px 15px; border-radius: 40px; color: white; margin-bottom: 16px;
+      font-size: 14px; outline: none;
+    }
+    .login-card input:focus { border-color: var(--gold); }
+    .login-error { color: var(--red); font-size: 12px; margin-top: 8px; min-height: 38px; }
+    .mobile-nav { display: none; } /* لم نعد بحاجة له */
   </style>
 </head>
 <body>
 
-<nav class="mobile-nav" id="mobileNav">
-  <div class="mobile-nav-item active" onclick="showSection('dashboard')" id="mnav-dashboard"><i class="fas fa-chart-line"></i><span>الرئيسية</span></div>
-  <div class="mobile-nav-item" onclick="showSection('add-product')" id="mnav-add-product"><i class="fas fa-plus-circle"></i><span>إضافة</span></div>
-  <div class="mobile-nav-item" onclick="showSection('products')" id="mnav-products"><i class="fas fa-tshirt"></i><span>المنتجات</span></div>
-  <div class="mobile-nav-item" onclick="showSection('orders')" id="mnav-orders"><i class="fas fa-shopping-bag"></i><span>الطلبات</span><div class="mobile-nav-badge" id="mobileOrdersBadge" style="display:none">0</div></div>
-</nav>
+<!-- شاشة تسجيل الدخول -->
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-card">
+    <h2>🔐 MH MANWIR</h2>
+    <p>الرجاء تسجيل الدخول للمتابعة</p>
+    <input type="text" id="loginUsername" placeholder="اسم المستخدم" autocomplete="off" />
+    <input type="password" id="loginPassword" placeholder="كلمة المرور" />
+    <button class="btn btn-gold" style="width:100%" onclick="attemptLogin()">دخول</button>
+    <div id="loginError" class="login-error"></div>
+  </div>
+</div>
 
-<aside class="sidebar">
+<div class="overlay-blur" id="overlayBlur" onclick="closeDrawer()"></div>
+
+<aside class="sidebar" id="sidebar">
   <div class="sidebar-logo"><div class="sidebar-logo-icon">MH</div><div><div class="sidebar-logo-name">MANWIR</div><div class="sidebar-logo-sub">Admin Panel</div></div></div>
   <nav class="sidebar-nav">
     <div class="nav-section-title">الرئيسية</div>
-    <div class="nav-item active" onclick="showSection('dashboard')" id="nav-dashboard"><i class="fas fa-chart-line"></i><span>لوحة التحكم</span></div>
+    <div class="nav-item active" onclick="showSection('dashboard'); closeDrawer();" id="nav-dashboard"><i class="fas fa-chart-line"></i><span>لوحة التحكم</span></div>
     <div class="nav-section-title">المتجر</div>
-    <div class="nav-item" onclick="showSection('add-product')" id="nav-add-product"><i class="fas fa-plus-circle"></i><span>إضافة منتج</span></div>
-    <div class="nav-item" onclick="showSection('products')" id="nav-products"><i class="fas fa-tshirt"></i><span>المنتجات</span></div>
+    <div class="nav-item" onclick="showSection('add-product'); closeDrawer();" id="nav-add-product"><i class="fas fa-plus-circle"></i><span>إضافة منتج</span></div>
+    <div class="nav-item" onclick="showSection('products'); closeDrawer();" id="nav-products"><i class="fas fa-tshirt"></i><span>المنتجات</span></div>
     <div class="nav-section-title">الطلبات</div>
-    <div class="nav-item" onclick="showSection('orders')" id="nav-orders"><i class="fas fa-shopping-bag"></i><span>الطلبات</span><div class="nav-badge" id="ordersBadge" style="display:none">0</div></div>
+    <div class="nav-item" onclick="showSection('orders'); closeDrawer();" id="nav-orders"><i class="fas fa-shopping-bag"></i><span>الطلبات</span><div class="nav-badge" id="ordersBadge" style="display:none">0</div></div>
   </nav>
   <div class="sidebar-footer"><div style="font-size:11px;color:#444">MH MANWIR Admin</div><div style="font-size:10px;color:#333">© 2026</div></div>
 </aside>
 
 <main class="main">
-  <div class="topbar"><div class="topbar-title" id="topbarTitle">لوحة التحكم</div><div class="topbar-right"><div class="status-dot"></div><div class="status-text">متصل بـ Firebase</div><a href="index.html" target="_blank" class="btn btn-outline btn-sm"><i class="fas fa-external-link-alt"></i> المتجر</a></div></div>
+  <div class="topbar">
+    <button class="hamburger" id="hamburgerBtn" onclick="toggleDrawer()"><i class="fas fa-bars"></i></button>
+    <div class="topbar-title" id="topbarTitle">لوحة التحكم</div>
+    <div class="topbar-right" style="display: flex; align-items: center; gap: 12px;">
+      <div class="status-dot"></div>
+      <div class="status-text">متصل</div>
+      <a href="index.html" target="_blank" class="btn btn-outline btn-sm"><i class="fas fa-external-link-alt"></i> المتجر</a>
+    </div>
+  </div>
   <div class="page-content">
 
     <!-- DASHBOARD -->
@@ -180,7 +250,7 @@
 
     <!-- PRODUCTS -->
     <div class="section" id="section-products">
-      <div class="page-header"><h2>إدارة <span>المنتجات</span></h2><button class="btn btn-gold" onclick="showSection('add-product')"><i class="fas fa-plus"></i> منتج جديد</button></div>
+      <div class="page-header"><h2>إدارة <span>المنتجات</span></h2><button class="btn btn-gold" onclick="showSection('add-product'); closeDrawer();"><i class="fas fa-plus"></i> منتج جديد</button></div>
       <div class="card"><div class="card-title"><i class="fas fa-list"></i> كل المنتجات</div><div id="productsList"><div class="empty-state"><i class="fas fa-box-open"></i><p>لا يوجد منتجات بعد</p></div></div></div>
     </div>
 
@@ -218,6 +288,59 @@
   let allProducts = {};
   let allOrders = {};
   let deleteCallback = null;
+  let isLoggedIn = false;
+
+  // ===== LOGIN =====
+  function attemptLogin() {
+    const user = document.getElementById('loginUsername').value.trim();
+    const pass = document.getElementById('loginPassword').value.trim();
+    if (user === 'mounir' && pass === 'manwir20262026') {
+      isLoggedIn = true;
+      sessionStorage.setItem('adminAuth', 'true');
+      document.getElementById('loginOverlay').style.display = 'none';
+      showToast('تم تسجيل الدخول بنجاح');
+      loadFirebaseData();
+    } else {
+      document.getElementById('loginError').innerText = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+    }
+  }
+  function checkAuth() {
+    if (sessionStorage.getItem('adminAuth') === 'true') {
+      isLoggedIn = true;
+      document.getElementById('loginOverlay').style.display = 'none';
+      loadFirebaseData();
+    } else {
+      isLoggedIn = false;
+      document.getElementById('loginOverlay').style.display = 'flex';
+    }
+  }
+  function loadFirebaseData() {
+    // only start listeners after login
+    db.ref('products').on('value', snap => {
+      allProducts = snap.val() || {};
+      document.getElementById('statProducts').innerText = Object.keys(allProducts).length;
+      renderProductsList(allProducts);
+      document.getElementById('lastUpdateTime').innerText = 'آخر تحديث: ' + new Date().toLocaleTimeString('ar-DZ');
+    });
+    db.ref('orders').on('value', snap => {
+      allOrders = snap.val() || {};
+      renderOrdersTable(allOrders);
+    });
+  }
+
+  // ===== DRAWER FUNCTIONS =====
+  function toggleDrawer() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlayBlur');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('active');
+  }
+  function closeDrawer() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlayBlur');
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+  }
 
   // ===== NAVIGATION =====
   function showSection(name) {
@@ -225,11 +348,9 @@
     sections.forEach(s => {
       document.getElementById(`section-${s}`)?.classList.remove('active');
       document.getElementById(`nav-${s}`)?.classList.remove('active');
-      document.getElementById(`mnav-${s}`)?.classList.remove('active');
     });
     document.getElementById(`section-${name}`)?.classList.add('active');
     document.getElementById(`nav-${name}`)?.classList.add('active');
-    document.getElementById(`mnav-${name}`)?.classList.add('active');
     const titles = { dashboard:'لوحة التحكم', 'add-product':'إضافة منتج جديد', products:'إدارة المنتجات', orders:'إدارة الطلبات' };
     document.getElementById('topbarTitle').innerText = titles[name] || name;
   }
@@ -325,7 +446,6 @@
     }
   }
 
-  // ===== LIVE PREVIEW =====
   function updateLivePreview() {
     document.getElementById('previewName').innerText = document.getElementById('pName').value || 'اسم المنتج';
     const price = document.getElementById('pPrice').value;
@@ -337,7 +457,7 @@
   document.getElementById('pPrice')?.addEventListener('input', updateLivePreview);
   document.getElementById('pOldPrice')?.addEventListener('input', updateLivePreview);
 
-  // ===== SUBMIT PRODUCT (بدون رفع) =====
+  // ===== SUBMIT PRODUCT =====
   async function submitProduct() {
     const name = document.getElementById('pName').value.trim();
     const price = parseFloat(document.getElementById('pPrice').value);
@@ -399,7 +519,7 @@
     showToast('تم تفريغ النموذج');
   }
 
-  // ===== DELETE PRODUCT (مصلحة) =====
+  // ===== DELETE PRODUCT =====
   function deleteProduct(key, name) {
     askDelete(`هل تريد حذف المنتج "${name}" نهائياً؟`, async () => {
       try {
@@ -425,7 +545,7 @@
     closeConfirm();
   }
 
-  // ===== RENDER PRODUCTS LIST =====
+  // ===== RENDER PRODUCTS =====
   function renderProductsList(data) {
     const container = document.getElementById('productsList');
     const keys = Object.keys(data);
@@ -451,7 +571,7 @@
     }).join('');
   }
 
-  // ===== ORDERS FUNCTIONS (مختصرة) =====
+  // ===== ORDERS =====
   function renderOrdersTable(data) {
     const keys = Object.keys(data).reverse();
     document.getElementById('statOrders').innerText = keys.length;
@@ -460,8 +580,6 @@
     const badge = document.getElementById('ordersBadge');
     badge.innerText = newCount;
     badge.style.display = newCount > 0 ? 'flex' : 'none';
-    const mobileBadge = document.getElementById('mobileOrdersBadge');
-    if (mobileBadge) { mobileBadge.innerText = newCount; mobileBadge.style.display = newCount > 0 ? 'flex' : 'none'; }
     const tbody = document.getElementById('ordersTableBody');
     const dashBody = document.getElementById('dashOrdersBody');
     if (keys.length === 0) {
@@ -474,7 +592,7 @@
       const products = o.products ? (Array.isArray(o.products) ? o.products : Object.values(o.products)) : [];
       const productsStr = products.map(p => p.name + ' × ' + (p.quantity||1)).join('<br>') || '-';
       return `<tr>
-        <td class="td-name" onclick="openOrderDetail('${k}')">${escapeHtml(o.name||'-')}</td>
+        <td onclick="openOrderDetail('${k}')" style="cursor:pointer">${escapeHtml(o.name||'-')}</td>
         <td>${escapeHtml(o.phone||'-')}</td>
         <td>${escapeHtml(o.wilaya||'-')}</td>
         <td>${escapeHtml(o.commune||'-')}</td>
@@ -488,7 +606,7 @@
       const o = data[k];
       const products = o.products ? (Array.isArray(o.products) ? o.products : Object.values(o.products)) : [];
       const productsStr = products.map(p => p.name).join(', ') || '-';
-      return `<tr><td>${escapeHtml(o.name||'-')}</td><td>${escapeHtml(o.phone||'-')}</td><td>${escapeHtml(o.wilaya||'-')}</td><td style="font-size:12px">${productsStr}</td><td>${o.createdAt ? new Date(o.createdAt).toLocaleDateString('ar-DZ') : '-'}</td>`;
+      return `<tr><td>${escapeHtml(o.name||'-')}</td><td>${escapeHtml(o.phone||'-')}</td><td>${escapeHtml(o.wilaya||'-')}</td><td style="font-size:12px">${productsStr}</td><td>${o.createdAt ? new Date(o.createdAt).toLocaleDateString('ar-DZ') : '-'}</td></tr>`;
     }).join('');
   }
   function toggleOrderDone(key) {
@@ -507,7 +625,7 @@
     const o = allOrders[key];
     if(!o) return;
     const products = o.products ? (Array.isArray(o.products) ? o.products : Object.values(o.products)) : [];
-    const productsHtml = products.map(p => `<div class="od-product-item"><img src="${p.image||''}" style="width:40px;height:40px;object-fit:cover;border-radius:8px"><div>${p.name} × ${p.quantity}<br>${p.size ? `مقاس: ${p.size} | لون: ${p.color}` : ''}</div></div>`).join('');
+    const productsHtml = products.map(p => `<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><img src="${p.image||''}" style="width:40px;height:40px;object-fit:cover;border-radius:8px"><div>${p.name} × ${p.quantity}<br>${p.size ? `مقاس: ${p.size} | لون: ${p.color}` : ''}</div></div>`).join('');
     document.getElementById('orderDetailContent').innerHTML = `
       <div><strong>الاسم:</strong> ${escapeHtml(o.name)}</div><div><strong>الهاتف:</strong> ${escapeHtml(o.phone)}</div>
       <div><strong>الولاية:</strong> ${escapeHtml(o.wilaya)}</div><div><strong>البلدية:</strong> ${escapeHtml(o.commune)}</div>
@@ -520,21 +638,10 @@
 
   function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
 
-  // ===== FIREBASE LISTENERS =====
-  db.ref('products').on('value', snap => {
-    allProducts = snap.val() || {};
-    document.getElementById('statProducts').innerText = Object.keys(allProducts).length;
-    renderProductsList(allProducts);
-    document.getElementById('lastUpdateTime').innerText = 'آخر تحديث: ' + new Date().toLocaleTimeString('ar-DZ');
-  });
-  db.ref('orders').on('value', snap => {
-    allOrders = snap.val() || {};
-    renderOrdersTable(allOrders);
-  });
-
   // ===== INIT =====
   initSizes();
   updateLivePreview();
+  checkAuth();
 </script>
 </body>
 </html>
