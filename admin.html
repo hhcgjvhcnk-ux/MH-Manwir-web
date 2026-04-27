@@ -196,15 +196,26 @@
     .f-input:focus, .f-textarea:focus, .f-select:focus { border-color: var(--gold); background: #1e1e1e; }
     .f-textarea { resize: vertical; min-height: 80px; }
     .f-select option { background: #1a1a1a; }
-    .image-url-input {
-      background: var(--panel2); border: 1.5px solid var(--border);
-      border-radius: 10px; color: var(--white); font-size: 13px;
-      padding: 11px 14px; outline: none; width: 100%; margin-bottom: 10px;
-      transition: border-color 0.2s;
+    /* ===== CLOUDINARY UPLOAD ===== */
+    .upload-zone {
+      border: 2px dashed var(--border); border-radius: 12px;
+      padding: 28px 16px; text-align: center; cursor: pointer;
+      transition: border-color 0.25s, background 0.25s; position: relative;
+      background: var(--panel2);
     }
-    .image-url-input:focus { border-color: var(--gold); background: #1e1e1e; }
-    .url-preview { margin-top: 12px; text-align: center; }
-    .url-preview img { max-width: 100%; max-height: 200px; border-radius: 12px; border: 1px solid var(--border); }
+    .upload-zone:hover, .upload-zone.drag-over { border-color: var(--gold); background: rgba(201,168,76,0.06); }
+    .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-zone-icon { font-size: 28px; color: var(--gold); margin-bottom: 10px; }
+    .upload-zone-text { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+    .upload-zone-sub { font-size: 11px; color: var(--gray-400); }
+    .upload-progress-wrap { margin-top: 14px; display: none; }
+    .upload-progress-bar { height: 5px; background: var(--border); border-radius: 10px; overflow: hidden; }
+    .upload-progress-fill { height: 100%; background: var(--gold); width: 0%; transition: width 0.3s; border-radius: 10px; }
+    .upload-status-text { font-size: 11px; color: var(--gray-400); margin-top: 6px; text-align: right; }
+    .uploaded-preview-wrap { margin-top: 14px; position: relative; display: none; }
+    .uploaded-preview-wrap img { max-width: 100%; border-radius: 12px; border: 1px solid var(--border); display: block; }
+    .remove-upload-btn { position: absolute; top: 6px; left: 6px; background: rgba(0,0,0,0.7); border: none; color: white; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+    .remove-upload-btn:hover { background: var(--red); }
 
     /* ===== COLORS ===== */
     .colors-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
@@ -253,37 +264,6 @@
     .product-row-info { flex: 1; min-width: 0; }
     .product-row-name { font-size: 14px; font-weight: 800; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .product-row-price { font-size: 13px; color: var(--gold); font-weight: 700; margin-top: 3px; }
-
-    /* ===== STOCK BADGE ===== */
-    .stock-badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px;
-      margin-top: 4px;
-    }
-    .stock-ok { background: rgba(67,160,71,0.15); color: #43a047; }
-    .stock-low { background: rgba(255,152,0,0.15); color: #ff9800; }
-    .stock-out { background: rgba(229,57,53,0.15); color: var(--red); }
-
-    /* ===== OUT OF STOCK NOTIFICATION ===== */
-    .stock-alert {
-      background: rgba(229,57,53,0.1); border: 1px solid rgba(229,57,53,0.4);
-      border-radius: 12px; padding: 14px 18px; margin-bottom: 20px;
-      display: flex; align-items: center; gap: 12px; animation: fadeIn 0.4s ease;
-    }
-    .stock-alert i { color: var(--red); font-size: 18px; flex-shrink: 0; }
-    .stock-alert-text { font-size: 13px; color: var(--white); flex: 1; }
-    .stock-alert-text strong { color: var(--red); }
-    @keyframes fadeIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
-
-    /* ===== EDIT PRODUCT MODAL ===== */
-    .edit-modal-box {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
-      padding: 28px; width: 100%; max-width: 600px; box-shadow: var(--shadow);
-      max-height: 90vh; overflow-y: auto;
-    }
-    .edit-modal-box h3 { font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 20px; letter-spacing: 1px; color: var(--gold); }
-    .btn-blue { background: rgba(33,150,243,0.12); color: #2196f3; border: 1px solid rgba(33,150,243,0.3); }
-    .btn-blue:hover { background: rgba(33,150,243,0.22); }
 
     /* ===== EMPTY STATE ===== */
     .empty-state { text-align: center; padding: 50px 20px; color: var(--gray-600); }
@@ -499,29 +479,6 @@
                 <label>السعر القديم (دج)</label>
                 <input class="f-input" id="pOldPrice" type="number" placeholder="5500" />
               </div>
-              <div class="field">
-                <label>الكمية المتوفرة <span>*</span></label>
-                <input class="f-input" id="pStock" type="number" placeholder="10" min="1" />
-              </div>
-              <div class="field">
-                <label>تصنيف المنتج</label>
-                <select class="f-select" id="pCategory">
-                  <option value="">-- اختر تصنيفاً --</option>
-                  <option value="رجالي">رجالي</option>
-                  <option value="نسائي">نسائي</option>
-                  <option value="أطفال">أطفال</option>
-                  <option value="إكسسوار">إكسسوار</option>
-                  <option value="رياضي">رياضي</option>
-                </select>
-              </div>
-              <div class="field form-full">
-                <label>علامة المنتج (Badge)</label>
-                <input class="f-input" id="pBadge" placeholder="مثال: جديد | تخفيض | الأكثر طلباً" />
-              </div>
-              <div class="field form-full">
-                <label>رابط خارجي (اختياري)</label>
-                <input class="f-input" id="pExternalLink" placeholder="https://..." />
-              </div>
               <div class="field form-full">
                 <label>وصف المنتج</label>
                 <textarea class="f-textarea" id="pDesc" rows="3" placeholder="اكتب وصفاً احترافياً للمنتج..."></textarea>
@@ -555,18 +512,32 @@
         <!-- العمود الأيسر -->
         <div class="add-product-col">
           <div class="card">
-            <div class="card-title"><i class="fas fa-image"></i> رابط الصورة الرئيسية</div>
+            <div class="card-title"><i class="fas fa-cloud-upload-alt"></i> رفع الصورة الرئيسية</div>
             <div class="field">
-              <label>رابط الصورة (URL) <span>*</span></label>
-              <input type="text" class="image-url-input" id="mainImageUrl" placeholder="https://i.ibb.co/xxxxx/image.jpg" oninput="updatePreviewFromUrl()" />
-              <div class="url-preview" id="urlPreviewArea">
-                <div id="previewPlaceholder" style="color:var(--gray-600); font-size:12px; padding:10px 0;">سيرى الزبون الصورة هنا</div>
-                <img id="previewMainImg" src="" style="display:none; max-width:100%; border-radius:12px;" />
+              <label>الصورة الرئيسية <span>*</span></label>
+              <!-- منطقة الرفع -->
+              <div class="upload-zone" id="uploadZone" ondragover="event.preventDefault(); this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event)">
+                <input type="file" id="mainImageFile" accept="image/*" onchange="handleFileSelect(this.files[0])">
+                <div class="upload-zone-icon"><i class="fas fa-image"></i></div>
+                <div class="upload-zone-text">اضغط لاختيار صورة أو اسحبها هنا</div>
+                <div class="upload-zone-sub">PNG, JPG, WEBP – سيتم ضغطها تلقائياً بـ Cloudinary</div>
               </div>
-              <div class="field" style="margin-top:12px;">
-                <label>روابط إضافية (اختياري) – كل رابط في سطر</label>
-                <textarea class="f-textarea" id="extraImageUrls" rows="3" placeholder="https://i.ibb.co/xxx2.jpg&#10;https://i.ibb.co/xxx3.jpg" oninput="updatePreviewFromUrl()"></textarea>
+              <!-- شريط التقدم -->
+              <div class="upload-progress-wrap" id="uploadProgressWrap">
+                <div class="upload-progress-bar"><div class="upload-progress-fill" id="uploadProgressFill"></div></div>
+                <div class="upload-status-text" id="uploadStatusText">جاري الرفع...</div>
               </div>
+              <!-- معاينة الصورة المرفوعة -->
+              <div class="uploaded-preview-wrap" id="uploadedPreviewWrap">
+                <img id="previewMainImg" src="" alt="الصورة الرئيسية" />
+                <button class="remove-upload-btn" onclick="removeUploadedImage()" title="إزالة الصورة"><i class="fas fa-times"></i></button>
+              </div>
+              <!-- حقل مخفي لحفظ الرابط -->
+              <input type="hidden" id="mainImageUrl" />
+            </div>
+            <div class="field" style="margin-top:16px;">
+              <label>صور إضافية (اختياري) – كل رابط في سطر</label>
+              <textarea class="f-textarea" id="extraImageUrls" rows="3" placeholder="https://res.cloudinary.com/...&#10;https://res.cloudinary.com/..."></textarea>
             </div>
           </div>
 
@@ -606,7 +577,6 @@
           <i class="fas fa-plus"></i> منتج جديد
         </button>
       </div>
-      <div id="stockAlerts"></div>
       <div class="card">
         <div class="card-title"><i class="fas fa-list"></i> كل المنتجات</div>
         <div id="productsList">
@@ -668,68 +638,8 @@
   </div>
 </div>
 
-<!-- MODAL: تعديل المنتج -->
-<div class="modal-overlay" id="editModal">
-  <div class="edit-modal-box">
-    <h3><i class="fas fa-edit" style="margin-left:8px;"></i> تعديل المنتج</h3>
-    <input type="hidden" id="editProductKey" />
-    <div class="form-grid" style="gap:14px;">
-      <div class="field form-full">
-        <label>اسم المنتج <span>*</span></label>
-        <input class="f-input" id="editName" placeholder="اسم المنتج" />
-      </div>
-      <div class="field form-full">
-        <label>العنوان الفرعي</label>
-        <input class="f-input" id="editSubtitle" placeholder="العنوان الفرعي" />
-      </div>
-      <div class="field">
-        <label>السعر الحالي (دج)</label>
-        <input class="f-input" id="editPrice" type="number" placeholder="4900" />
-      </div>
-      <div class="field">
-        <label>السعر القديم (دج)</label>
-        <input class="f-input" id="editOldPrice" type="number" placeholder="5500" />
-      </div>
-      <div class="field">
-        <label>الكمية المتوفرة</label>
-        <input class="f-input" id="editStock" type="number" min="0" placeholder="10" />
-      </div>
-      <div class="field">
-        <label>تصنيف المنتج</label>
-        <select class="f-select" id="editCategory">
-          <option value="">-- بدون تصنيف --</option>
-          <option value="رجالي">رجالي</option>
-          <option value="نسائي">نسائي</option>
-          <option value="أطفال">أطفال</option>
-          <option value="إكسسوار">إكسسوار</option>
-          <option value="رياضي">رياضي</option>
-        </select>
-      </div>
-      <div class="field form-full">
-        <label>علامة المنتج (Badge)</label>
-        <input class="f-input" id="editBadge" placeholder="مثال: جديد | تخفيض" />
-      </div>
-      <div class="field form-full">
-        <label>وصف المنتج</label>
-        <textarea class="f-textarea" id="editDesc" rows="3" placeholder="وصف المنتج..."></textarea>
-      </div>
-      <div class="field form-full">
-        <label>رابط الصورة الرئيسية</label>
-        <input class="f-input" id="editMainImage" placeholder="https://..." />
-      </div>
-      <div class="field form-full">
-        <label>روابط إضافية (كل رابط في سطر)</label>
-        <textarea class="f-textarea" id="editExtraImages" rows="3" placeholder="https://...&#10;https://..."></textarea>
-      </div>
-    </div>
-    <div class="modal-actions" style="margin-top:22px;">
-      <button class="btn btn-outline" onclick="closeEditModal()">إلغاء</button>
-      <button class="btn btn-gold" onclick="saveEditProduct()"><i class="fas fa-save"></i> حفظ التعديلات</button>
-    </div>
-  </div>
-</div>
-
 <script>
+  // ===== FIREBASE CONFIG =====
   const firebaseConfig = {
     apiKey: "AIzaSyCt0x0QBq3NyDCrn0MDTxJFmbYNCyOxYTs",
     authDomain: "manwir-688a1.firebaseapp.com",
@@ -782,23 +692,8 @@
       document.getElementById('lastUpdateTime').innerText = 'آخر تحديث: ' + new Date().toLocaleTimeString('ar-DZ');
     });
     db.ref('orders').on('value', snap => {
-      const prev = Object.keys(allOrders).length;
       allOrders = snap.val() || {};
-      const curr = Object.keys(allOrders).length;
-      // إذا وصل طلب جديد نتحقق من الكمية
-      if (curr > prev && prev > 0) checkAndDeductStock();
       renderOrdersTable(allOrders);
-    });
-  }
-
-  // ===== STOCK DEDUCTION (يُنفّذ من جانب صفحة المتجر عادةً، لكن نوفر دالة احتياطية هنا) =====
-  async function checkAndDeductStock() {
-    // هذه الدالة تُستخدم فقط كمرجع – خصم الكمية الفعلي يجب أن يتم في صفحة المتجر عند تأكيد الطلب
-    // نتحقق من المنتجات التي نفدت كميتها وننبّه
-    const outOfStock = Object.entries(allProducts).filter(([k,p]) => p.stock !== undefined && p.stock <= 0);
-    outOfStock.forEach(([k,p]) => {
-      // المنتج نفد – يمكن حذفه تلقائياً أو الإبقاء عليه
-      // هنا نكتفي بالإشعار في renderStockAlerts
     });
   }
 
@@ -896,6 +791,120 @@
     ).join('');
   }
 
+  // ===== CLOUDINARY CONFIG =====
+  const CLOUDINARY_CLOUD_NAME = 'ddeace4bi';
+  const CLOUDINARY_UPLOAD_PRESET = 'manwir_upload';
+
+  // ===== CLOUDINARY UPLOAD =====
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('uploadZone').classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileSelect(file);
+  }
+
+  async function handleFileSelect(file) {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { showToast('الملف المختار ليس صورة', 'error'); return; }
+    if (file.size > 15 * 1024 * 1024) { showToast('حجم الصورة يتجاوز 15 ميغا', 'error'); return; }
+
+    // إظهار شريط التقدم
+    const progressWrap = document.getElementById('uploadProgressWrap');
+    const progressFill = document.getElementById('uploadProgressFill');
+    const statusText = document.getElementById('uploadStatusText');
+    const previewWrap = document.getElementById('uploadedPreviewWrap');
+
+    progressWrap.style.display = 'block';
+    previewWrap.style.display = 'none';
+    progressFill.style.width = '0%';
+    statusText.innerText = 'جاري الرفع إلى Cloudinary...';
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    // تحسين تلقائي بـ Cloudinary
+    formData.append('transformation', 'q_auto,f_auto');
+
+    try {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`);
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 90);
+          progressFill.style.width = pct + '%';
+          statusText.innerText = `جاري الرفع... ${pct}%`;
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          const data = JSON.parse(xhr.responseText);
+          // بناء رابط محسّن بـ q_auto و f_auto
+          const optimizedUrl = data.secure_url.replace('/upload/', '/upload/q_auto,f_auto/');
+          document.getElementById('mainImageUrl').value = optimizedUrl;
+
+          progressFill.style.width = '100%';
+          statusText.innerText = '✅ تم الرفع بنجاح!';
+
+          // عرض المعاينة
+          setTimeout(() => {
+            progressWrap.style.display = 'none';
+            previewWrap.style.display = 'block';
+            document.getElementById('previewMainImg').src = optimizedUrl;
+            // تحديث معاينة البطاقة
+            updatePreviewImage(optimizedUrl);
+            showToast('تم رفع الصورة بنجاح ✅');
+          }, 600);
+        } else {
+          const err = JSON.parse(xhr.responseText);
+          progressWrap.style.display = 'none';
+          showToast('فشل الرفع: ' + (err.error?.message || 'خطأ غير معروف'), 'error');
+        }
+      };
+
+      xhr.onerror = () => {
+        progressWrap.style.display = 'none';
+        showToast('فشل الاتصال بـ Cloudinary', 'error');
+      };
+
+      xhr.send(formData);
+    } catch(e) {
+      progressWrap.style.display = 'none';
+      showToast('حدث خطأ: ' + e.message, 'error');
+    }
+  }
+
+  function removeUploadedImage() {
+    document.getElementById('mainImageUrl').value = '';
+    document.getElementById('mainImageFile').value = '';
+    document.getElementById('uploadedPreviewWrap').style.display = 'none';
+    document.getElementById('uploadProgressWrap').style.display = 'none';
+    // إعادة معاينة البطاقة
+    updatePreviewImage('');
+  }
+
+  // ===== LIVE PREVIEW =====
+  function updatePreviewImage(url) {
+    const img = document.getElementById('previewImg');
+    const ph = document.getElementById('previewImgPlaceholder');
+    if (url) {
+      img.src = url;
+      img.style.display = 'block';
+      ph.style.display = 'none';
+    } else {
+      img.style.display = 'none';
+      ph.style.display = 'flex';
+    }
+  }
+
+  // (kept for compatibility – no longer driven by text input)
+  function updatePreviewFromUrl() {
+    const url = document.getElementById('mainImageUrl').value.trim();
+    updatePreviewImage(url);
+    updateLivePreview();
+  }
+
   // ===== LIVE PREVIEW =====
   function updateLivePreview() {
     document.getElementById('previewName').innerText = document.getElementById('pName')?.value || 'اسم المنتج';
@@ -907,27 +916,6 @@
       `<div style="width:12px;height:12px;border-radius:50%;background:${c.hex};border:1px solid #ccc;"></div>`
     ).join('');
   }
-  function updatePreviewFromUrl() {
-    const url = document.getElementById('mainImageUrl').value.trim();
-    const img = document.getElementById('previewMainImg');
-    const ph = document.getElementById('previewPlaceholder');
-    const previewImg = document.getElementById('previewImg');
-    const previewPh = document.getElementById('previewImgPlaceholder');
-    if (url) {
-      img.src = url;
-      img.style.display = 'block';
-      ph.style.display = 'none';
-      previewImg.src = url;
-      previewImg.style.display = 'block';
-      previewPh.style.display = 'none';
-    } else {
-      img.style.display = 'none';
-      ph.style.display = 'block';
-      previewImg.style.display = 'none';
-      previewPh.style.display = 'flex';
-    }
-    updateLivePreview();
-  }
 
   // ===== SUBMIT PRODUCT =====
   async function submitProduct() {
@@ -936,7 +924,7 @@
     const mainUrl = document.getElementById('mainImageUrl').value.trim();
     if (!name) { showToast('أدخل اسم المنتج', 'error'); return; }
     if (!price || isNaN(price)) { showToast('أدخل سعر صحيح', 'error'); return; }
-    if (!mainUrl) { showToast('أدخل رابط الصورة الرئيسية', 'error'); return; }
+    if (!mainUrl) { showToast('يجب رفع الصورة الرئيسية أولاً', 'error'); return; }
     const extraUrls = document.getElementById('extraImageUrls').value.trim().split('\n').map(u => u.trim()).filter(Boolean);
     const images = [mainUrl, ...extraUrls];
     const product = {
@@ -949,10 +937,6 @@
       image: mainUrl,
       sizes: [...selectedSizes],
       colors: selectedColors.map(c => ({ hex: c.hex, name: c.name })),
-      stock: parseInt(document.getElementById('pStock').value) || 0,
-      category: document.getElementById('pCategory').value || '',
-      badge: document.getElementById('pBadge').value.trim() || '',
-      externalLink: document.getElementById('pExternalLink').value.trim() || '',
       createdAt: Date.now()
     };
     const btn = document.getElementById('submitBtn');
@@ -970,73 +954,22 @@
   }
 
   function resetForm() {
-    ['pName','pSubtitle','pPrice','pOldPrice','pDesc','mainImageUrl','extraImageUrls','customSizeInput','colorName','pStock','pBadge','pExternalLink'].forEach(id => {
+    ['pName','pSubtitle','pPrice','pOldPrice','pDesc','extraImageUrls','customSizeInput','colorName'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
-    const cat = document.getElementById('pCategory');
-    if (cat) cat.value = '';
+    // مسح حالة رفع Cloudinary
+    document.getElementById('mainImageUrl').value = '';
+    document.getElementById('mainImageFile').value = '';
+    document.getElementById('uploadedPreviewWrap').style.display = 'none';
+    document.getElementById('uploadProgressWrap').style.display = 'none';
     selectedColors = [];
     selectedSizes = [];
     document.getElementById('colorsGrid').innerHTML = '';
     document.getElementById('sizesRow').querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
-    document.getElementById('previewMainImg').style.display = 'none';
-    document.getElementById('previewPlaceholder').style.display = 'block';
-    document.getElementById('previewImg').style.display = 'none';
-    document.getElementById('previewImgPlaceholder').style.display = 'flex';
+    updatePreviewImage('');
     updateLivePreview();
     initSizes();
-  }
-
-  // ===== EDIT PRODUCT =====
-  function openEditModal(key) {
-    const p = allProducts[key];
-    if (!p) return;
-    document.getElementById('editProductKey').value = key;
-    document.getElementById('editName').value = p.name || '';
-    document.getElementById('editSubtitle').value = p.subtitle || '';
-    document.getElementById('editPrice').value = p.price || '';
-    document.getElementById('editOldPrice').value = p.oldPrice || '';
-    document.getElementById('editStock').value = p.stock !== undefined ? p.stock : '';
-    document.getElementById('editCategory').value = p.category || '';
-    document.getElementById('editBadge').value = p.badge || '';
-    document.getElementById('editDesc').value = p.description || '';
-    document.getElementById('editMainImage').value = p.image || (p.images && p.images[0]) || '';
-    const extraImgs = (p.images || []).slice(1).join('\n');
-    document.getElementById('editExtraImages').value = extraImgs;
-    document.getElementById('editModal').classList.add('open');
-  }
-  function closeEditModal() {
-    document.getElementById('editModal').classList.remove('open');
-  }
-  async function saveEditProduct() {
-    const key = document.getElementById('editProductKey').value;
-    const name = document.getElementById('editName').value.trim();
-    const price = parseFloat(document.getElementById('editPrice').value);
-    if (!name) { showToast('أدخل اسم المنتج', 'error'); return; }
-    if (!price || isNaN(price)) { showToast('أدخل سعر صحيح', 'error'); return; }
-    const mainImg = document.getElementById('editMainImage').value.trim();
-    const extraRaw = document.getElementById('editExtraImages').value.trim().split('\n').map(u=>u.trim()).filter(Boolean);
-    const images = mainImg ? [mainImg, ...extraRaw] : (allProducts[key].images || []);
-    const updates = {
-      name,
-      subtitle: document.getElementById('editSubtitle').value.trim() || 'MH MANWIR',
-      price,
-      oldPrice: parseFloat(document.getElementById('editOldPrice').value) || 0,
-      description: document.getElementById('editDesc').value.trim() || '',
-      image: mainImg || (allProducts[key].image || ''),
-      images,
-      stock: parseInt(document.getElementById('editStock').value) || 0,
-      category: document.getElementById('editCategory').value || '',
-      badge: document.getElementById('editBadge').value.trim() || '',
-    };
-    try {
-      await db.ref('products/' + key).update(updates);
-      showToast('✅ تم حفظ التعديلات بنجاح');
-      closeEditModal();
-    } catch(e) {
-      showToast('❌ فشل الحفظ: ' + e.message, 'error');
-    }
   }
 
   // ===== DELETE PRODUCT =====
@@ -1065,28 +998,10 @@
     closeConfirm();
   }
 
-  // ===== STOCK ALERTS =====
-  function renderStockAlerts(data) {
-    const container = document.getElementById('stockAlerts');
-    if (!container) return;
-    const outOfStock = Object.entries(data).filter(([k,p]) => (p.stock !== undefined && p.stock <= 0));
-    if (outOfStock.length === 0) { container.innerHTML = ''; return; }
-    container.innerHTML = outOfStock.map(([k,p]) => `
-      <div class="stock-alert">
-        <i class="fas fa-exclamation-triangle"></i>
-        <div class="stock-alert-text">
-          ⚠️ <strong>انتهت الكمية!</strong> المنتج "<strong>${escapeHtml(p.name||'')}</strong>" نفدت كميته – يرجى تجديده أو حذفه.
-        </div>
-        <button class="btn btn-outline btn-sm" onclick="openEditModal('${k}')"><i class="fas fa-edit"></i> تعديل</button>
-      </div>
-    `).join('');
-  }
-
   // ===== RENDER PRODUCTS =====
   function renderProductsList(data) {
     const container = document.getElementById('productsList');
     const keys = Object.keys(data);
-    renderStockAlerts(data);
     if (keys.length === 0) {
       container.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><p>لا يوجد منتجات بعد</p></div>';
       return;
@@ -1094,24 +1009,14 @@
     container.innerHTML = keys.map(key => {
       const p = data[key];
       const imgUrl = (p.images && p.images[0]) || p.image || 'https://placehold.co/60x60/111/888?text=img';
-      const stock = p.stock !== undefined ? p.stock : '—';
-      let stockClass = 'stock-ok', stockLabel = `متوفر: ${stock}`;
-      if (p.stock !== undefined) {
-        if (p.stock <= 0) { stockClass = 'stock-out'; stockLabel = 'نفدت الكمية'; }
-        else if (p.stock <= 3) { stockClass = 'stock-low'; stockLabel = `متبقي: ${p.stock} فقط!`; }
-      }
       return `
         <div class="product-row">
           <img class="product-row-img" src="${imgUrl}" onerror="this.src='https://placehold.co/60x60/111/888?text=err'">
           <div class="product-row-info">
             <div class="product-row-name">${escapeHtml(p.name || 'منتج')}</div>
             <div class="product-row-price">${((p.price)||0).toLocaleString()} دج</div>
-            <span class="stock-badge ${stockClass}"><i class="fas fa-box"></i> ${stockLabel}</span>
           </div>
           <div style="display:flex;gap:8px;flex-shrink:0;">
-            <button class="btn btn-blue btn-sm btn-icon" onclick="openEditModal('${key}')" title="تعديل المنتج">
-              <i class="fas fa-edit"></i>
-            </button>
             <button class="btn btn-red btn-sm btn-icon" onclick="deleteProduct('${key}', '${escapeHtml(p.name || '')}')">
               <i class="fas fa-trash-alt"></i>
             </button>
@@ -1140,22 +1045,13 @@
       const o = data[k];
       const products = o.products ? (Array.isArray(o.products) ? o.products : Object.values(o.products)) : [];
       const productsStr = products.map(p => p.name + ' × ' + (p.quantity||1)).join('<br>') || '-';
-      const phone = o.phone ? o.phone.replace(/\s+/g,'') : '';
-      const waPhone = phone.startsWith('0') ? '213' + phone.slice(1) : phone;
-      const phoneHtml = phone
-        ? `<a href="https://wa.me/${waPhone}" target="_blank" style="color:#2196f3;font-weight:700;text-decoration:none;" title="فتح واتساب">📱 ${escapeHtml(o.phone)}</a>`
-        : '-';
-      const dateStr = o.createdAt ? new Date(o.createdAt).toLocaleString('ar-DZ', {
-        year:'numeric', month:'2-digit', day:'2-digit',
-        hour:'2-digit', minute:'2-digit', second:'2-digit'
-      }) : '-';
       return `<tr>
         <td onclick="openOrderDetail('${k}')" style="cursor:pointer;color:var(--white);font-weight:700;">${escapeHtml(o.name||'-')}</td>
-        <td>${phoneHtml}</td>
+        <td>${escapeHtml(o.phone||'-')}</td>
         <td>${escapeHtml(o.wilaya||'-')}</td>
         <td>${escapeHtml(o.commune||'-')}</td>
         <td style="font-size:12px;">${productsStr}</td>
-        <td style="white-space:nowrap;font-size:12px;">${dateStr}</td>
+        <td style="white-space:nowrap;">${o.createdAt ? new Date(o.createdAt).toLocaleDateString('ar-DZ') : '-'}</td>
         <td><span class="order-status ${o.done ? 'status-done' : 'status-new'}">${o.done ? '✓ منجز' : '🔔 جديد'}</span></td>
         <td>
           <div style="display:flex;gap:6px;">
@@ -1206,25 +1102,16 @@
         <div style="font-size:13px;"><div style="color:var(--white);font-weight:700;">${escapeHtml(p.name||'')} × ${p.quantity||1}</div>${p.size ? `<div style="color:var(--gray-400);font-size:11px;">مقاس: ${p.size} | لون: ${p.color||'-'}</div>` : ''}</div>
       </div>`
     ).join('');
-    const phone = o.phone ? o.phone.replace(/\s+/g,'') : '';
-    const waPhone = phone.startsWith('0') ? '213' + phone.slice(1) : phone;
-    const phoneHtml = phone
-      ? `<a href="https://wa.me/${waPhone}" target="_blank" style="color:#2196f3;font-weight:700;text-decoration:none;">📱 ${escapeHtml(o.phone)}</a>`
-      : '-';
-    const dateStr = o.createdAt ? new Date(o.createdAt).toLocaleString('ar-DZ', {
-      year:'numeric', month:'2-digit', day:'2-digit',
-      hour:'2-digit', minute:'2-digit', second:'2-digit'
-    }) : '-';
     document.getElementById('orderDetailContent').innerHTML = `
       <div><strong>الاسم:</strong> ${escapeHtml(o.name||'-')}</div>
-      <div><strong>الهاتف:</strong> ${phoneHtml}</div>
+      <div><strong>الهاتف:</strong> ${escapeHtml(o.phone||'-')}</div>
       <div><strong>الولاية:</strong> ${escapeHtml(o.wilaya||'-')}</div>
       <div><strong>البلدية:</strong> ${escapeHtml(o.commune||'-')}</div>
       ${o.address ? `<div><strong>العنوان:</strong> ${escapeHtml(o.address)}</div>` : ''}
       <div><strong>المنتجات:</strong></div>
       <div>${productsHtml}</div>
       <div><strong>المجموع:</strong> <span style="color:var(--gold);font-weight:900;">${(o.total||0).toLocaleString()} دج</span></div>
-      <div><strong>التاريخ والوقت:</strong> ${dateStr}</div>
+      <div><strong>التاريخ:</strong> ${o.createdAt ? new Date(o.createdAt).toLocaleString('ar-DZ') : '-'}</div>
     `;
     document.getElementById('deleteOrderFromModal').onclick = () => {
       document.getElementById('orderModal').classList.remove('open');
@@ -1236,35 +1123,6 @@
   function escapeHtml(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
-
-  /*
-  ===== ملاحظة لخصم الكمية من صفحة المتجر (index.html) =====
-  عند تأكيد الطلب في صفحة المتجر، أضف هذا الكود:
-
-  async function deductStockOnOrder(cartItems) {
-    for (const item of cartItems) {
-      const ref = db.ref('products/' + item.id);
-      await ref.transaction(product => {
-        if (product) {
-          const newStock = (product.stock || 0) - (item.quantity || 1);
-          if (newStock <= 0) {
-            product.stock = 0;
-            product.outOfStock = true;
-          } else {
-            product.stock = newStock;
-          }
-        }
-        return product;
-      });
-      // إذا نفدت الكمية احذف المنتج من العرض (اجعل hidden = true)
-      const snap = await db.ref('products/' + item.id + '/stock').once('value');
-      if ((snap.val() || 0) <= 0) {
-        await db.ref('products/' + item.id + '/hidden').set(true);
-      }
-    }
-  }
-  =====================================================
-  */
 
   // ===== INIT =====
   initSizes();
