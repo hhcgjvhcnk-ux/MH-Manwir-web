@@ -3,7 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>لوحة التحكم – MH MANWIR | رفع متعدد الصور</title>
+  <title>MH MANWIR Admin</title>
+
+  <!-- ===== PWA Meta Tags ===== -->
+  <meta name="application-name" content="MH MANWIR Admin" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="MH MANWIR Admin" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="msapplication-TileColor" content="#000000" />
+  <meta name="msapplication-TileImage" content="logoo.png" />
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- App Icons -->
+  <link rel="icon" type="image/png" sizes="192x192" href="logoo.png" />
+  <link rel="apple-touch-icon" href="logoo.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="logoo.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="logoo.png" />
+  <link rel="apple-touch-icon" sizes="167x167" href="logoo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700;800&family=Oswald:wght@700&display=swap" rel="stylesheet" />
@@ -913,6 +933,15 @@
   function toggleDrawer() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlayBlur').classList.toggle('active'); }
   function closeDrawer() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlayBlur').classList.remove('active'); }
 
+  // ===== PWA – تسجيل Service Worker =====
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(reg => console.log('[PWA] Service Worker مسجّل بنجاح، النطاق:', reg.scope))
+        .catch(err => console.error('[PWA] فشل تسجيل Service Worker:', err));
+    });
+  }
+
   // ===== INIT =====
   initSizes();
   updateLivePreview();
@@ -920,4 +949,4 @@
   ['pName', 'pPrice', 'pOldPrice'].forEach(id => document.getElementById(id)?.addEventListener('input', updateLivePreview));
 </script>
 </body>
-  </html>
+</html>
