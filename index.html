@@ -6,7 +6,7 @@
   <title>MH MANWIR – Ensemble Homme lin nature</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700;800&family=Oswald:wght@700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700;800&family=Bebas+Neue&family=Montserrat:wght@800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -63,7 +63,7 @@
 
     /* ===== HERO ===== */
     .hero { background: #000; padding: 50px 20px 40px; text-align: center; position: relative; overflow: hidden; }
-    .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; opacity: 0.55; }
+    .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; opacity: 1; }
     .hero-content { max-width: 700px; margin: 0 auto; position: relative; z-index: 1; }
     .brand-logo-hero { max-width: 160px; width: 40%; margin: 0 auto 12px; display: block; }
     .hero-brand-name { font-family: 'Oswald', sans-serif; font-size: clamp(42px, 9vw, 52px); font-weight: 700; color: white; letter-spacing: 5px; line-height: 1; margin-bottom: 16px; text-transform: uppercase; }
@@ -73,7 +73,7 @@
 
     /* ===== STATS ===== */
     .stats-strip { background: #111; padding: 10px 16px; display: flex; justify-content: center; flex-wrap: wrap; gap: 24px; border-bottom: 1px solid rgba(200,169,110,0.2); }
-    .stat-item { display: flex; align-items: center; gap: 6px; color: #bbb; font-size: 12px; font-weight: 600; }
+    .stat-item { display: flex; align-items: center; gap: 6px; color: #fff; font-size: 12px; font-weight: 600; }
     .stat-item i { color: var(--white); }
 
     /* ===== PRODUCTS SECTION ===== */
@@ -155,10 +155,10 @@
     .pm-select:focus { border-color: #111; background-color: white; }
     .pm-custom-input-wrap { display: none; }
     .pm-custom-input-wrap.visible { display: block; }
-    .pm-actions { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 8px; }
-    .pm-add-cart-btn { background: #111; color: white; padding: 13px; border-radius: 60px; font-weight: 800; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; font-family: 'Cairo', sans-serif; transition: 0.2s; }
+    .pm-actions { padding: 16px 20px 20px; display: flex; flex-direction: row; gap: 10px; }
+    .pm-add-cart-btn { background: #111; color: white; padding: 13px; border-radius: 60px; font-weight: 800; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; flex: 1; font-family: 'Cairo', sans-serif; transition: 0.2s; }
     .pm-add-cart-btn:hover { background: #333; }
-    .pm-order-btn { background: white; color: #111; padding: 13px; border-radius: 60px; font-weight: 800; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; font-family: 'Cairo', sans-serif; border: 2px solid #111; transition: 0.2s; }
+    .pm-order-btn { background: white; color: #111; padding: 13px; border-radius: 60px; font-weight: 800; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; flex: 1; font-family: 'Cairo', sans-serif; border: 2px solid #111; transition: 0.2s; }
     .pm-order-btn:hover { background: #f4f2ee; }
 
     /* ===== CART SIDEBAR ===== */
@@ -218,6 +218,117 @@
     /* ===== TOAST ===== */
     .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: #111; color: white; padding: 10px 20px; border-radius: 50px; font-weight: 600; display: flex; gap: 6px; font-size: 13px; z-index: 1300; opacity: 0; transition: 0.3s; white-space: nowrap; pointer-events: none; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  
+      /* ===== SHARE BUTTON ===== */
+    .pm-share-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 60px;
+      border: 1.5px solid #e0e0e0;
+      background: #fafafa;
+      color: #444;
+      font-family: 'Cairo', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .pm-share-btn:hover {
+      border-color: #111;
+      background: #111;
+      color: white;
+    }
+    .pm-share-btn:active {
+      transform: scale(0.96);
+    }
+      /* ===== FORM GRID IN PRODUCT MODAL ===== */
+    .pm-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .pm-form-grid .pm-input,
+    .pm-form-grid .pm-select {
+      margin-bottom: 0;
+    }
+    .pm-form-grid .full-width {
+      grid-column: 1 / -1;
+    }
+    .pm-form-grid textarea.pm-input {
+      min-height: 90px;
+      border-radius: 16px;
+      resize: vertical;
+    }
+
+    /* ===== SUCCESS MODAL ===== */
+    .success-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 1400;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .success-modal-overlay.open {
+      display: flex;
+    }
+    .success-modal-box {
+      background: white;
+      border-radius: 22px;
+      padding: 36px 28px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      animation: modalIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    .success-icon-wrap {
+      width: 72px;
+      height: 72px;
+      background: #4caf50;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+      color: white;
+      font-size: 32px;
+    }
+    .success-modal-box h3 {
+      font-size: 20px;
+      font-weight: 900;
+      margin-bottom: 10px;
+      color: #111;
+    }
+    .success-modal-box p {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+    .success-btn {
+      background: #111;
+      color: white;
+      padding: 12px 28px;
+      border-radius: 60px;
+      font-weight: 800;
+      font-size: 14px;
+      font-family: 'Cairo', sans-serif;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .success-btn:hover {
+      background: #333;
+    }
+
 
     /* ===== RESPONSIVE ===== */
     @media (max-width: 1024px) { .products-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); } }
@@ -236,6 +347,7 @@
     .products-empty i { font-size: 48px; color: #ddd; margin-bottom: 14px; display: block; }
     .products-empty p { font-size: 15px; }
   </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -250,6 +362,8 @@
     <button class="drawer-close" id="drawerClose"><i class="fas fa-times"></i></button>
   </div>
   <nav class="drawer-nav">
+    <!-- أضف هذا -->
+    <a href="admin.html" style="color:#c8a96e;"><i class="fas fa-lock"></i> لوحة التحكم</a>
     <a href="#"><i class="fas fa-home"></i> الرئيسية</a>
     <a href="#products"><i class="fas fa-tshirt"></i> المجموعة</a>
     <a href="#"><i class="fas fa-tags"></i> العروض</a>
@@ -263,7 +377,7 @@
 <header class="header">
   <div class="header-top">
     <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
-    <a href="https://hhcgjvhcnk-ux.github.io/MH-Manwir-web/" class="nav-logo">
+    <a href="#" class="nav-logo">
       <img src="logo.png" alt="MH" onerror="this.style.display='none'">
       <span class="nav-logo-name">MH MANWIR</span>
     </a>
@@ -392,6 +506,17 @@
     <button class="modal-close" id="closeModalBtn">إلغاء</button>
   </div>
 </div>
+  
+  <!-- SUCCESS MODAL -->
+<div class="success-modal-overlay" id="successModal">
+  <div class="success-modal-box">
+    <div class="success-icon-wrap"><i class="fas fa-check"></i></div>
+    <h3>تم إرسال طلبيتك بنجاح!</h3>
+    <p>سنتواصل معك عبر واتساب في أقرب وقت ممكن.</p>
+    <button class="success-btn" onclick="closeSuccessModal()">العودة للصفحة الرئيسية</button>
+  </div>
+</div>
+
 
 <!-- PRODUCT DETAIL MODAL -->
 <div class="product-modal-overlay" id="productModalOverlay">
@@ -412,6 +537,11 @@
         <span class="pm-price-new" id="pmPrice">4,900 دج</span>
         <span class="pm-price-old" style="display:none">5,200 دج</span>
         <span class="pm-discount" style="display:none">-6%</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <button class="pm-share-btn" id="pmShareBtn" onclick="copyProductLink()" title="نسخ رابط المنتج">
+          <i class="fas fa-link" style="margin-left:4px;"></i> نسخ الرابط
+        </button>
       </div>
       <div class="pm-desc">
         <span><i class="fas fa-check-circle" style="color:#111"></i> جودة عالية – قطن طبيعي 100%</span>
@@ -439,13 +569,15 @@
         </div>
       </div>
       <div class="pm-divider"></div>
-      <div class="pm-order-title"><i class="fas fa-user"></i> معلومات الطلب</div>
-      <input type="text" class="pm-input" id="pmName" placeholder="الاسم الكامل">
-      <input type="tel" class="pm-input" id="pmPhone" placeholder="رقم الهاتف (مثال: 0555123456)">
-      <select class="pm-select" id="pmWilaya" onchange="onWilayaChange()"><option value="">-- اختر الولاية --</option></select>
-      <select class="pm-select" id="pmCommune" disabled onchange="onCommuneChange()"><option value="">-- اختر البلدية --</option></select>
-      <div class="pm-custom-input-wrap" id="pmCustomCommuneWrap"><input type="text" class="pm-input" id="pmCustomCommune" placeholder="اكتب اسم بلديتك"></div>
-      <textarea class="pm-input pm-textarea" id="pmAddress" placeholder="تفاصيل إضافية للعنوان (اختياري)"></textarea>
+                    <div class="pm-order-title"><i class="fas fa-user"></i> معلومات الطلب</div>
+                    <div class="pm-form-grid">
+                      <input type="text" class="pm-input" id="pmName" placeholder="الاسم أو اللقب">
+                      <input type="tel" class="pm-input" id="pmPhone" placeholder="رقم الهاتف (مثال: 0555123456)">
+                      <select class="pm-select" id="pmWilaya" onchange="onWilayaChange()"><option value="">-- اختر الولاية --</option></select>
+                      <select class="pm-select" id="pmCommune" disabled onchange="onCommuneChange()"><option value="">-- اختر البلدية --</option></select>
+                      <div class="pm-custom-input-wrap full-width" id="pmCustomCommuneWrap"><input type="text" class="pm-input" id="pmCustomCommune" placeholder="اكتب اسم بلديتك"></div>
+                      <textarea class="pm-input pm-textarea full-width" id="pmAddress" placeholder="تفاصيل إضافية للعنوان (اختياري)" rows="4"></textarea>
+                    </div>
     </div>
     <div class="pm-actions">
       <button class="pm-add-cart-btn" id="pmAddCartBtn"><i class="fas fa-shopping-bag"></i> أضف إلى السلة</button>
@@ -500,6 +632,71 @@
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2500);
   }
+    function showSuccessModal() {
+    document.getElementById('successModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSuccessModal() {
+    document.getElementById('successModal').classList.remove('open');
+    document.body.style.overflow = '';
+    
+    // إغلاق نافذة المنتج إن كانت مفتوحة
+    closePm();
+    
+    // إغلاق نافذة السلة ونموذج الطلب
+    document.getElementById('infoModal').classList.remove('open');
+    closeCart();
+    
+    // تفريغ حقول نافذة المنتج
+    document.getElementById('pmName').value = '';
+    document.getElementById('pmPhone').value = '';
+    document.getElementById('pmAddress').value = '';
+    document.getElementById('pmWilaya').value = '';
+    document.getElementById('pmCommune').innerHTML = '<option value="">-- اختر البلدية --</option>';
+    document.getElementById('pmCommune').disabled = true;
+    document.getElementById('pmCustomCommuneWrap').classList.remove('visible');
+    document.getElementById('pmCustomCommune').value = '';
+    
+    // تفريغ حقول نموذج السلة
+    document.getElementById('customerName').value = '';
+    document.getElementById('customerPhone').value = '';
+    document.getElementById('customerAddress').value = '';
+    document.getElementById('customerWilaya').value = '';
+    document.getElementById('customerCommune').innerHTML = '<option value="">-- اختر البلدية --</option>';
+    document.getElementById('customerCommune').disabled = true;
+    document.getElementById('cartCustomCommuneWrap').style.display = 'none';
+    document.getElementById('customerCustomCommune').value = '';
+    
+    // تفريغ السلة
+    cart = [];
+    updateCartUI();
+    
+    // التمرير للأعلى
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+    function copyProductLink() {
+    if (!activeProduct) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('product', activeProduct.id);
+    const shareUrl = url.toString();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(shareUrl).then(() => showToast('✅ تم نسخ رابط المنتج')).catch(() => fallbackCopy(shareUrl));
+    } else {
+      fallbackCopy(shareUrl);
+    }
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('✅ تم نسخ رابط المنتج');
+    }
+  }
+
 
   function populateWilayas() {
     const selects = ['pmWilaya', 'customerWilaya'];
@@ -822,13 +1019,20 @@
     const imgUrl = p.images[0];
     try {
       const photoRes = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chat_id: chatId, photo: imgUrl, caption: msg, parse_mode: "Markdown" }) });
-      if (!photoRes.ok) await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: "Markdown" }) });
-      await db.ref('orders').push({ name, phone, wilaya: wilayaText, commune: communeText, address, delivery: pmDeliveryType, payment: pmPaymentMethod, products: [{ name: p.name, price: p.price, quantity: 1, image: p.images[0] || p.image, size: selectedSize, color: selectedColor }], productName: p.name, total: p.price, createdAt: Date.now(), done: false });
-      showToast("✅ تم إرسال طلبك بنجاح!");
-      closePm();
-      document.getElementById('pmName').value = ''; document.getElementById('pmPhone').value = ''; document.getElementById('pmAddress').value = '';
-      document.getElementById('pmWilaya').value = ''; document.getElementById('pmCommune').innerHTML = '<option value="">-- اختر البلدية --</option>'; document.getElementById('pmCommune').disabled = true;
-    } catch(e) { showToast("❌ فشل الإرسال، تأكد من الاتصال"); }
+      let telegramOk = photoRes.ok;
+      if (!telegramOk) {
+        const msgRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: "Markdown" }) });
+        telegramOk = msgRes.ok;
+      }
+      if (!telegramOk) throw new Error('Telegram failed');
+      
+      await db.ref('orders').push().set({ name, phone, wilaya: wilayaText, commune: communeText, address, delivery: pmDeliveryType, payment: pmPaymentMethod, products: [{ name: p.name, price: p.price, quantity: 1, image: p.images[0] || p.image, size: selectedSize, color: selectedColor }], productName: p.name, total: p.price, createdAt: Date.now(), done: false });
+      
+      showSuccessModal();
+    } catch(e) { 
+      console.error(e);
+      showToast("❌ فشل الإرسال، تأكد من الاتصال"); 
+    }
   });
 
   const cartSidebar = document.getElementById('cartSidebar');
@@ -866,13 +1070,20 @@
     const chatId = "8776176941";
     try {
       const photoRes = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chat_id: chatId, photo: firstImg, caption: msg, parse_mode: "Markdown" }) });
-      if (!photoRes.ok) await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: "Markdown" }) });
-      await db.ref('orders').push({ name, phone, wilaya: wilayaText, commune: communeText, address, delivery: cartDeliveryType, payment: cartPaymentMethod, products: cart.map(item => ({ name: item.name, price: item.price, quantity: item.quantity, image: item.image, size: item.size, color: item.color })), total, createdAt: Date.now(), done: false });
-      showToast("✅ تم إرسال طلبك بنجاح!");
-      cart = []; updateCartUI(); modal.classList.remove('open'); closeCart();
-      document.getElementById('customerName').value = ''; document.getElementById('customerPhone').value = ''; document.getElementById('customerAddress').value = '';
-      document.getElementById('customerWilaya').value = ''; document.getElementById('customerCommune').innerHTML = '<option value="">-- اختر البلدية --</option>'; document.getElementById('customerCommune').disabled = true;
-    } catch(e) { showToast("❌ فشل الإرسال، تأكد من الاتصال"); }
+      let telegramOk = photoRes.ok;
+      if (!telegramOk) {
+        const msgRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: "Markdown" }) });
+        telegramOk = msgRes.ok;
+      }
+      if (!telegramOk) throw new Error('Telegram failed');
+      
+      await db.ref('orders').push().set({ name, phone, wilaya: wilayaText, commune: communeText, address, delivery: cartDeliveryType, payment: cartPaymentMethod, products: cart.map(item => ({ name: item.name, price: item.price, quantity: item.quantity, image: item.image, size: item.size, color: item.color })), total, createdAt: Date.now(), done: false });
+      
+      showSuccessModal();
+    } catch(e) { 
+      console.error(e);
+      showToast("❌ فشل الإرسال، تأكد من الاتصال"); 
+    }
   });
 
   const drawer = document.getElementById('mobileDrawer');
@@ -915,6 +1126,17 @@
     const currentSearch = searchInput.value.trim().toLowerCase();
     if (currentSearch) renderFiltered(currentSearch);
     else { products = [...allProducts]; buildCards(); }
+    
+    // فتح المنتج مباشرة إذا كان هناك ?product=ID في الرابط
+    const urlParams = new URLSearchParams(window.location.search);
+    const directId = urlParams.get('product');
+    if (directId && !window.__directOpened) {
+      const target = allProducts.find(p => p.id === directId);
+      if (target) {
+        window.__directOpened = true;
+        openProductModal(target);
+      }
+    }
   });
 
   populateWilayas();
