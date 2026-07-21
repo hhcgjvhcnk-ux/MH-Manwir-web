@@ -1,5 +1,5 @@
 /* =============================================
-   MH MANWIR Admin – Service Worker
+   MH MNOWIR Admin – Service Worker
    ============================================= */
 
 const CACHE_NAME = 'mh-manwir-admin-v1';
@@ -8,7 +8,7 @@ const CACHE_NAME = 'mh-manwir-admin-v1';
 const STATIC_ASSETS = [
   './admin.html',
   './manifest.json',
-  './logoo.png'
+  './logo.png'
 ];
 
 // ===== INSTALL =====
@@ -83,11 +83,11 @@ self.addEventListener('fetch', event => {
 // ===== PUSH NOTIFICATIONS (اختياري للمستقبل) =====
 self.addEventListener('push', event => {
   const data = event.data ? event.data.json() : {};
-  const title = data.title || 'MH MANWIR Admin';
+  const title = data.title || 'MH MNOWIR Admin';
   const options = {
     body: data.body || 'لديك إشعار جديد',
-    icon: './logoo.png',
-    badge: './logoo.png',
+    icon: './logo.png',
+    badge: './logo.png',
     dir: 'rtl',
     lang: 'ar'
   };

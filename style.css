@@ -440,6 +440,8 @@ button {
 }
 
 /* ========== ORDER FORM ========== */
+.stars i.active { color: #f1c40f; }
+
 .order-form-section {
   background: var(--off-white);
   border: 1px solid var(--light-grey);

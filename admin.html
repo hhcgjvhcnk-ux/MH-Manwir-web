@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-    <title>MH MANWIR — لوحة التحكم</title>
+    <title>MH MNOWIR — لوحة التحكم</title>
     <link rel="manifest" href="/manifest.json"/>
     <meta name="theme-color" content="#08080a"/>
     <meta name="apple-mobile-web-app-capable" content="yes"/>
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&family=Tajawal:wght@300;400;500;700;800&family=Oswald:wght@600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&family=Tajawal:wght@300;400;500;700;800&family=Oswald:wght@600;700&family=Jost:wght@400;500;600;700;800&family=Cinzel:wght@500;700;800&family=Cormorant+Garamond:wght@400;600;700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js">
     </script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js">
     </script>
     <style>
         *,
@@ -64,7 +66,7 @@
         }
         body {
             height: 100%;
-            font-family: 'Cairo', 'Tajawal', sans-serif;
+            font-family: 'Futura', 'Jost', 'Cairo', 'Tajawal', sans-serif;
             color: var(--text);
             direction: rtl;
             text-align: right;
@@ -108,17 +110,15 @@
 
         /* ══════ LOGIN OVERLAY ══════ */
         .login-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.92);
-            z-index: 5000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 5vw;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-        }
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    z-index: 5000;
+    display: none;  /* ← غيّر من flex إلى none */
+    align-items: center;
+    justify-content: center;
+    /* ... */
+}
         .login-wrap {
             width: 100%;
             max-width: 380px;
@@ -156,10 +156,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Oswald', sans-serif;
+            font-family: 'Cinzel', 'Cormorant Garamond', 'Playfair Display', serif;
             font-size: 17px;
             font-weight: 700;
             color: white;
+            font-style: normal !important;
             letter-spacing: 2px;
         }
         .login-card {
@@ -179,12 +180,13 @@
             }
         }
         .login-title {
-            font-family: 'Oswald', sans-serif;
+            font-family: 'Cinzel', 'Cormorant Garamond', 'Playfair Display', serif;
             font-size: 26px;
             font-weight: 700;
-            letter-spacing: 3px;
+            letter-spacing: 2px;
             color: #fff;
             margin-bottom: 6px;
+            font-style: normal !important;
         }
         .login-sub {
             font-size: 11px;
@@ -672,7 +674,7 @@
             color: #fff;
         }
         .stat-value {
-            font-family: 'Oswald', sans-serif;
+            font-family: 'Cinzel', 'Cormorant Garamond', 'Playfair Display', serif;
             font-size: 30px;
             font-weight: 700;
             color: #fff;
@@ -1085,7 +1087,7 @@
             color: #fff;
         }
         .product-price {
-            font-family: 'Oswald', sans-serif;
+            font-family: 'Cinzel', 'Cormorant Garamond', 'Playfair Display', serif;
             font-size: 14px;
             font-weight: 700;
             color: #fff;
@@ -1371,11 +1373,11 @@
                 <div class="login-emblem-inner">MH</div>
             </div>
             <div class="login-card">
-                <div class="login-title">MH MANWIR</div>
+                <div class="login-title">MH MNOWIR</div>
                 <div class="login-sub">Admin Portal · لوحة التحكم</div>
                 <div class="login-field">
-                    <i class="fas fa-user login-field-icon"></i>
-                    <input type="text" id="loginUsername" placeholder="اسم المستخدم" autocomplete="username" onkeydown="if(event.key==='Enter')attemptLogin()"/>
+                    <i class="fas fa-envelope login-field-icon"></i>
+                    <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" autocomplete="email" onkeydown="if(event.key==='Enter')attemptLogin()"/>
                 </div>
                 <div class="login-field">
                     <i class="fas fa-lock login-field-icon"></i>
@@ -1396,11 +1398,14 @@
         <header class="top-header">
             <div class="header-left">
                 <div class="header-logo">MH</div>
-                <span class="header-brand">MH MANWIR</span>
+                <span class="header-brand">MH MNOWIR</span>
                 <span class="header-title" id="topbarTitle">لوحة التحكم</span>
             </div>
             <div class="header-right">
-                <button class="header-store-btn" title="عرض المتجر" onclick="location.href='/'">
+                <button class="header-store-btn" id="pwaInstallBtn" title="تثبيت كتطبيق" onclick="installPWA()" style="display:none;color:#4caf50;">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button class="header-store-btn" title="عرض المتجر" onclick="window.open('/','_blank')">
                     <i class="fas fa-store"></i>
                 </button>
                 <div class="header-user">
@@ -1455,8 +1460,9 @@
                         <div class="form-col">
                             <div class="card"><div class="card-header"><div class="card-icon"><i class="fas fa-tag"></i></div><div><div class="card-title">معلومات المنتج</div></div></div>
                                 <div class="field"><label>اسم المنتج *</label><input class="f-input" id="pName" placeholder="مثال: قميص كاجوال" oninput="updateLivePreview()"></div>
-                                <div class="field"><label>التصنيف الفرعي</label><input class="f-input" id="pSubtitle" placeholder="MH MANWIR"></div>
-                                <div class="field-row"><div class="field"><label>السعر (دج)</label><input class="f-input" id="pPrice" type="number" oninput="updateLivePreview()"></div><div class="field"><label>السعر الأصلي (دج)</label><input class="f-input" id="pOldPrice" type="number" oninput="updateLivePreview()"></div></div>
+                                <div class="field"><label>التصنيف الفرعي</label><input class="f-input" id="pSubtitle" placeholder="MH MNOWIR"></div>
+                                <div class="field-row"><div class="field"><label>السعر (دج) *</label><input class="f-input" id="pPrice" type="number" oninput="updateLivePreview()"></div><div class="field"><label>السعر الأصلي (دج)</label><input class="f-input" id="pOldPrice" type="number" oninput="updateLivePreview()"></div></div>
+                                <div class="field-row" style="margin-top:10px;"><div class="field"><label>سعر القطعة الواحدة عند شراء قطعتين (دج)</label><input class="f-input" id="pPrice2" type="number" placeholder="مثال: 250 (سعر القطعة)"></div><div class="field"><label>سعر القطعة عند شراء 3 قطع أو أكثر (دج)</label><input class="f-input" id="pPrice3" type="number" placeholder="مثال: 200 (سعر القطعة)"></div></div>
                                 <div class="field"><label>الوصف</label><textarea class="f-textarea" id="pDesc" rows="3"></textarea></div>
                             </div>
                             <div class="card"><div class="card-header"><div class="card-icon"><i class="fas fa-warehouse"></i></div><div><div class="card-title">المخزون</div></div></div>
@@ -1479,6 +1485,30 @@
                                 <div class="thumbnails-grid" id="thumbnailsContainer"></div>
                                 <textarea class="f-textarea" id="extraImageUrls" rows="2" placeholder="روابط إضافية" style="margin-top:8px;"></textarea>
                             </div>
+                            <div class="card"><div class="card-header"><div class="card-icon"><i class="fas fa-video"></i></div><div><div class="card-title">فيديو المنتج</div><div class="card-subtitle">اختياري – يظهر في بطاقة المنتج</div></div></div>
+                                <div id="productVideoPreviewWrap" style="display:none;margin-bottom:10px;">
+                                    <div style="position:relative;border-radius:10px;overflow:hidden;background:#111;border:1px solid #2a2a2f;">
+                                        <video id="productVideoPreview" style="width:100%;max-height:160px;object-fit:cover;display:block;" autoplay muted loop playsinline></video>
+                                        <button class="btn btn-red btn-icon-sm" onclick="removeProductVideo()" style="position:absolute;top:6px;left:6px;" title="حذف الفيديو">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="upload-zone" id="productVideoUploadZone" onclick="document.getElementById('productVideoFileInput').click()" style="padding:16px;">
+                                    <i class="upload-icon fas fa-film" style="font-size:20px;"></i>
+                                    <p style="font-size:12px;">اضغط لرفع فيديو</p>
+                                    <small>MP4, WebM — الحد الأقصى 100MB</small>
+                                </div>
+                                <input type="file" id="productVideoFileInput" accept="video/mp4,video/webm" style="display:none" onchange="handleProductVideoUpload(this.files)">
+                                <div id="productVideoProgress" style="display:none;margin-top:8px;">
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <div style="flex:1;background:#1a1a1d;border-radius:20px;height:5px;overflow:hidden;">
+                                            <div id="productVideoProgressBar" style="height:100%;background:#fff;border-radius:20px;width:0%;transition:width 0.3s;"></div>
+                                        </div>
+                                        <span id="productVideoProgressText" style="font-size:10px;color:#aaa;min-width:30px;">0%</span>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="card"><div class="card-header"><div class="card-icon"><i class="fas fa-eye"></i></div><div class="card-title">معاينة</div></div>
                                 <div class="preview-wrap"><div class="preview-img-area" id="previewImgArea"><i class="fas fa-image" style="color:#444;font-size:28px;"></i><img id="previewImg" src="" style="display:none;"></div>
                                     <div style="padding:10px;"><div id="previewName" style="color:#fff;">اسم المنتج</div><div style="display:flex;gap:6px;align-items:baseline;"><span id="previewOldPrice" style="text-decoration:line-through;color:#666;font-size:11px;"></span><span id="previewPrice" style="font-weight:700;color:#fff;">0 دج</span></div></div></div>
@@ -1492,6 +1522,94 @@
                 <div class="section" id="section-products">
                     <div class="page-header"><h2 class="page-title">المنتجات</h2><button class="btn btn-black" onclick="showSection('add-product')"><i class="fas fa-plus"></i> جديد</button></div>
                     <div class="card"><div class="card-header"><div class="card-icon"><i class="fas fa-list"></i></div><div><div class="card-title" id="productsCount">0 منتج</div></div></div><div class="products-grid" id="productsList"></div></div>
+                </div>
+
+                <!-- Settings Section -->
+                <div class="section" id="section-settings">
+                    <div class="page-header">
+                        <h2 class="page-title">الإعدادات</h2>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon"><i class="fas fa-video"></i></div>
+                            <div>
+                                <div class="card-title">فيديو الخلفية (Hero)</div>
+                                <div class="card-subtitle">الفيديو الذي يظهر في أعلى الصفحة الرئيسية</div>
+                            </div>
+                        </div>
+
+                        <!-- Current Video Preview -->
+                        <div id="heroVideoPreviewWrap" style="display:none; margin-bottom:16px;">
+                            <div style="font-size:10px;font-weight:700;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">الفيديو الحالي</div>
+                            <div style="position:relative;border-radius:12px;overflow:hidden;background:#111;border:1px solid #2a2a2f;">
+                                <video id="heroVideoPreview" style="width:100%;max-height:220px;object-fit:cover;display:block;" autoplay muted loop playsinline></video>
+                                <div style="position:absolute;top:8px;left:8px;display:flex;gap:6px;">
+                                    <button class="btn btn-red btn-icon-sm" onclick="deleteHeroVideo()" title="حذف الفيديو">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.7));padding:8px 12px;">
+                                    <div id="heroVideoUrlDisplay" style="font-size:10px;color:#aaa;direction:ltr;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- No Video State -->
+                        <div id="heroVideoEmpty" style="text-align:center;padding:16px 0;color:#555;font-size:13px;margin-bottom:16px;">
+                            <i class="fas fa-film" style="font-size:28px;color:#333;display:block;margin-bottom:8px;"></i>
+                            لا يوجد فيديو مخصص – يتم استخدام الفيديو الافتراضي (hero.mp4)
+                        </div>
+
+                        <!-- Upload Zone -->
+                        <div style="font-size:10px;font-weight:700;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">رفع فيديو جديد</div>
+                        <div class="upload-zone" id="heroVideoUploadZone" onclick="document.getElementById('heroVideoFileInput').click()" style="margin-bottom:12px;">
+                            <i class="upload-icon fas fa-cloud-upload-alt"></i>
+                            <p>اضغط لرفع فيديو</p>
+                            <small>MP4, WebM — الحد الأقصى 100MB</small>
+                        </div>
+                        <input type="file" id="heroVideoFileInput" accept="video/mp4,video/webm" style="display:none" onchange="handleHeroVideoUpload(this.files)">
+
+                        <!-- Upload Progress -->
+                        <div id="heroVideoProgress" style="display:none;margin-bottom:12px;">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <div style="flex:1;background:#1a1a1d;border-radius:20px;height:6px;overflow:hidden;">
+                                    <div id="heroVideoProgressBar" style="height:100%;background:#fff;border-radius:20px;width:0%;transition:width 0.3s;"></div>
+                                </div>
+                                <span id="heroVideoProgressText" style="font-size:11px;color:#aaa;min-width:35px;text-align:left;">0%</span>
+                            </div>
+                        </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Google Sheets Card -->
+                    <div class="card" style="margin-top:14px;">
+                        <div class="card-header">
+                            <div class="card-icon" style="background:#0f9d58;"><i class="fas fa-table"></i></div>
+                            <div>
+                                <div class="card-title">ربط Google Sheets</div>
+                                <div class="card-subtitle">إرسال الطلبات تلقائياً إلى جدول Google</div>
+                            </div>
+                        </div>
+
+                        <div id="gsheetStatus" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#1a1a1d;border-radius:10px;margin-bottom:12px;border:1px solid #2a2a2f;">
+                            <div id="gsheetDot" style="width:8px;height:8px;border-radius:50%;background:#555;flex-shrink:0;"></div>
+                            <span id="gsheetStatusText" style="font-size:11px;color:#888;">غير متصل</span>
+                        </div>
+
+                        <div class="field">
+                            <label>رابط Web App (من Google Apps Script)</label>
+                            <input class="f-input" id="gsheetUrlInput" placeholder="https://script.google.com/macros/s/..." dir="ltr" style="font-size:11px;">
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <button class="btn btn-black" onclick="saveGSheetUrl()" style="flex:1;"><i class="fas fa-save"></i> حفظ الرابط</button>
+                            <button class="btn btn-outline" onclick="testGSheetConnection()"><i class="fas fa-plug"></i> اختبار</button>
+                        </div>
+                        <div id="gsheetRemoveWrap" style="display:none;margin-top:8px;">
+                            <button class="btn btn-red" onclick="removeGSheetUrl()" style="width:100%;"><i class="fas fa-unlink"></i> إلغاء الربط</button>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Orders Section -->
@@ -1523,6 +1641,10 @@
                 <span>الطلبات</span>
                 <span class="nav-badge" id="ordersBadge" style="display:none;">0</span>
             </div>
+            <div class="bottom-nav-item nav-link" data-section="settings">
+                <i class="fas fa-cog"></i>
+                <span>الإعدادات</span>
+            </div>
         </nav>
 
     </div>
@@ -1552,30 +1674,65 @@
             editingProductKey = null,
             existingImagesBackup = [];
         let deleteCallback = null;
+        let productVideoUrl = '';
         const allProductsData = {};
 
         function attemptLogin() {
-            const u = document.getElementById('loginUsername').value.trim();
-            const p = document.getElementById('loginPassword').value.trim();
-            if (u === 'mounir' && p === 'manwir20262026') {
-                sessionStorage.setItem('adminAuth', 'true');
-                document.getElementById('loginOverlay').style.display = 'none';
-                showToast('مرحباً مونير!');
-                loadFirebaseData();
-            } else {
-                document.getElementById('loginError').innerHTML =
-                    '<i class="fas fa-times-circle"></i> بيانات خاطئة';
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const errorEl = document.getElementById('loginError');
+            
+            if (!email || !password) {
+                errorEl.innerHTML = '<i class="fas fa-times-circle"></i> يرجى ملء الحقول';
+                return;
             }
+            
+            firebase.auth().signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    showToast('تم تسجيل الدخول بنجاح!');
+                })
+                .catch((error) => {
+                    console.error(error);
+                    let errMsg = 'حدث خطأ غير متوقع: ' + error.message;
+                    if (error.code === 'auth/invalid-email') {
+                        errMsg = 'البريد الإلكتروني غير صالح أو مكتوب بصيغة خاطئة';
+                    } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                        errMsg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+                    } else if (error.code === 'auth/operation-not-allowed') {
+                        errMsg = 'ميزة البريد وكلمة المرور غير مفعلة في منصة Firebase. يرجى تفعيلها من الـ Console';
+                    } else if (error.code === 'auth/network-request-failed') {
+                        errMsg = 'فشل الاتصال بالإنترنت، يرجى التحقق من الشبكة';
+                    }
+                    errorEl.innerHTML = `<i class="fas fa-times-circle"></i> ${errMsg}`;
+                });
         }
 
         function checkAuth() {
-            if (sessionStorage.getItem('adminAuth') === 'true') { document.getElementById('loginOverlay').style.display =
-                    'none';
-                loadFirebaseData(); }
+            const overlay = document.getElementById('loginOverlay');
+            firebase.auth().onAuthStateChanged(user => {
+                if (user) {
+                    if (overlay) overlay.style.display = 'none';
+                    loadFirebaseData();
+                } else {
+                    if (overlay) overlay.style.display = 'flex';
+                }
+            });
         }
 
-        function logout() { sessionStorage.removeItem('adminAuth');
-            location.reload(); }
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            initSizes();
+            updateLivePreview();
+            ['pName', 'pPrice', 'pOldPrice'].forEach(id => document.getElementById(id)?.addEventListener('input', updateLivePreview));
+        });
+
+        function logout() {
+            firebase.auth().signOut().then(() => {
+                location.reload();
+            }).catch(err => {
+                showToast('خطأ أثناء تسجيل الخروج', 'error');
+            });
+        }
 
         function loadFirebaseData() {
             db.ref('products').on('value', snap => {
@@ -1721,9 +1878,12 @@
                 subtitle: document.getElementById('pSubtitle').value.trim() || 'MH MANWIR',
                 price,
                 oldPrice: parseFloat(document.getElementById('pOldPrice').value) || 0,
+                price2: parseFloat(document.getElementById('pPrice2').value) || 0,
+                price3: parseFloat(document.getElementById('pPrice3').value) || 0,
                 description: document.getElementById('pDesc').value.trim() || '',
                 images: finalImages,
                 image: finalImages[0],
+                videoUrl: productVideoUrl || '',
                 sizes: [...selectedSizes],
                 colors: selectedColors.map(c => ({ hex: c.hex, name: c.name })),
                 realQuantity: parseInt(document.getElementById('realQuantity').value) || 0,
@@ -1749,6 +1909,8 @@
             document.getElementById('pSubtitle').value = product.subtitle || '';
             document.getElementById('pPrice').value = product.price || '';
             document.getElementById('pOldPrice').value = product.oldPrice || '';
+            document.getElementById('pPrice2').value = product.price2 || '';
+            document.getElementById('pPrice3').value = product.price3 || '';
             document.getElementById('pDesc').value = product.description || '';
             document.getElementById('realQuantity').value = product.realQuantity || 0;
             document.getElementById('displayQuantity').value = product.displayQuantity || 0;
@@ -1762,6 +1924,9 @@
             document.getElementById('thumbnailsContainer').innerHTML = '';
             document.getElementById('extraImageUrls').value = existingImagesBackup.join('\n');
             updateMainPreview(existingImagesBackup[0] || '');
+            // Load product video
+            productVideoUrl = product.videoUrl || '';
+            updateProductVideoPreview(productVideoUrl);
             updateLivePreview();
             showSection('add-product');
         }
@@ -1770,7 +1935,7 @@
             editingProductKey = null;
             document.getElementById('formTitle').innerHTML = 'إضافة منتج جديد';
             document.getElementById('submitFormBtn').innerHTML = '<i class="fas fa-cloud-upload-alt"></i> نشر';
-            ['pName', 'pSubtitle', 'pPrice', 'pOldPrice', 'pDesc'].forEach(id => document.getElementById(id).value =
+            ['pName', 'pSubtitle', 'pPrice', 'pOldPrice', 'pDesc', 'pPrice2', 'pPrice3'].forEach(id => document.getElementById(id).value =
                 '');
             ['realQuantity', 'displayQuantity'].forEach(id => document.getElementById(id).value = '0');
             document.getElementById('showQuantityToggle').checked = true;
@@ -1781,6 +1946,8 @@
             document.getElementById('extraImageUrls').value = '';
             document.getElementById('colorsGrid').innerHTML = '';
             document.getElementById('thumbnailsContainer').innerHTML = '';
+            productVideoUrl = '';
+            updateProductVideoPreview('');
             initSizes();
             renderColors();
             updateLivePreview();
@@ -1838,7 +2005,10 @@
                 return `<tr>
         <td style="cursor:pointer;font-weight:700;color:#fff;" onclick="openOrderDetail('${k}')">${escapeHtml(o.name)}</td>
         <td>${escapeHtml(o.phone)}</td><td>${escapeHtml(o.wilaya)}</td><td>${escapeHtml(o.commune)}</td>
-        <td>${products.map(p => escapeHtml(p.name)+' ×'+p.quantity).join(', ')}</td>
+        <td>${products.map(p => {
+            const sizeColorStr = (p.size || p.color) ? ` (${p.size || 'غير محدد'}${p.color ? ', ' + p.color : ''})` : '';
+            return escapeHtml(p.name) + sizeColorStr + ' ×' + p.quantity;
+        }).join(', ')}</td>
         <td>${o.createdAt ? new Date(o.createdAt).toLocaleDateString('ar-DZ') : ''}</td>
         <td><span class="order-badge ${o.done?'badge-done':'badge-new'}">${o.done?'✓ منجز':'جديد'}</span></td>
         <td><button class="btn btn-outline btn-icon-sm" onclick="toggleOrderDone('${k}')"><i class="fas fa-${o.done?'undo':'check'}"></i></button>
@@ -1870,7 +2040,10 @@
             document.getElementById('orderDetailContent').innerHTML = `
       <p><strong>الاسم:</strong> ${escapeHtml(o.name)}</p><p><strong>الهاتف:</strong> ${escapeHtml(o.phone)}</p>
       <p><strong>الولاية:</strong> ${escapeHtml(o.wilaya)}</p><p><strong>البلدية:</strong> ${escapeHtml(o.commune)}</p>
-      <p><strong>المنتجات:</strong></p>${products.map(p => `<div>${escapeHtml(p.name)} × ${p.quantity}</div>`).join('')}
+      <p><strong>المنتجات:</strong></p>${products.map(p => {
+        const sizeColorStr = (p.size || p.color) ? ` (${p.size || 'غير محدد'}${p.color ? ', ' + p.color : ''})` : '';
+        return `<div>${escapeHtml(p.name)}${sizeColorStr} × ${p.quantity}</div>`;
+      }).join('')}
       <p><strong>المجموع:</strong> ${(o.total||0).toLocaleString()} دج</p>
     `;
             document.getElementById('orderModal').classList.add('open');
@@ -1889,7 +2062,7 @@
             closeConfirm(); }
 
         function showSection(name) {
-            ['dashboard', 'add-product', 'products', 'orders'].forEach(s => {
+            ['dashboard', 'add-product', 'products', 'orders', 'settings'].forEach(s => {
                 const sec = document.getElementById(`section-${s}`);
                 const navLink = document.querySelector(`.nav-link[data-section="${s}"]`);
                 if (sec) sec.classList.remove('active');
@@ -1904,6 +2077,7 @@
             else if (name === 'add-product') title = editingProductKey ? 'تعديل' : 'منتج جديد';
             else if (name === 'products') title = 'المنتجات';
             else if (name === 'orders') title = 'الطلبات';
+            else if (name === 'settings') title = 'الإعدادات';
             const titleEl = document.getElementById('topbarTitle');
             if (titleEl) titleEl.innerText = title;
             document.querySelector('.main-content').scrollTo(0, 0);
@@ -1933,6 +2107,330 @@
         checkAuth();
         ['pName', 'pPrice', 'pOldPrice'].forEach(id => document.getElementById(id)?.addEventListener('input',
             updateLivePreview));
+
+        // ══════ HERO VIDEO MANAGEMENT ══════
+        let currentHeroVideoUrl = '';
+
+        // Load current hero video from Firebase
+        db.ref('settings/heroVideo').on('value', snap => {
+            const url = snap.val();
+            currentHeroVideoUrl = url || '';
+            updateHeroVideoPreview(currentHeroVideoUrl);
+        });
+
+        function updateHeroVideoPreview(url) {
+            const previewWrap = document.getElementById('heroVideoPreviewWrap');
+            const emptyState = document.getElementById('heroVideoEmpty');
+            const videoEl = document.getElementById('heroVideoPreview');
+            const urlDisplay = document.getElementById('heroVideoUrlDisplay');
+
+            if (url) {
+                previewWrap.style.display = 'block';
+                emptyState.style.display = 'none';
+                videoEl.src = url;
+                urlDisplay.textContent = url;
+            } else {
+                previewWrap.style.display = 'none';
+                emptyState.style.display = 'block';
+                videoEl.src = '';
+                urlDisplay.textContent = '';
+            }
+        }
+
+        // ══════ PRODUCT VIDEO UPLOAD ══════
+        function updateProductVideoPreview(url) {
+            const wrap = document.getElementById('productVideoPreviewWrap');
+            const zone = document.getElementById('productVideoUploadZone');
+            const videoEl = document.getElementById('productVideoPreview');
+            if (url) {
+                wrap.style.display = 'block';
+                zone.style.display = 'none';
+                videoEl.src = url;
+            } else {
+                wrap.style.display = 'none';
+                zone.style.display = '';
+                videoEl.src = '';
+            }
+        }
+
+        function removeProductVideo() {
+            productVideoUrl = '';
+            updateProductVideoPreview('');
+            showToast('تم حذف الفيديو');
+        }
+
+        async function handleProductVideoUpload(files) {
+            if (!files || !files.length) return;
+            const file = files[0];
+
+            if (!file.type.startsWith('video/')) {
+                showToast('يرجى اختيار ملف فيديو', 'error');
+                return;
+            }
+            if (file.size > 100 * 1024 * 1024) {
+                showToast('حجم الفيديو يتجاوز 100MB', 'error');
+                return;
+            }
+
+            const progressWrap = document.getElementById('productVideoProgress');
+            const progressBar = document.getElementById('productVideoProgressBar');
+            const progressText = document.getElementById('productVideoProgressText');
+            progressWrap.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressText.textContent = '0%';
+
+            try {
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('upload_preset', UPLOAD_PRESET);
+                fd.append('resource_type', 'video');
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`);
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const pct = Math.round((e.loaded / e.total) * 100);
+                        progressBar.style.width = pct + '%';
+                        progressText.textContent = pct + '%';
+                    }
+                };
+
+                const result = await new Promise((resolve, reject) => {
+                    xhr.onload = () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            resolve(JSON.parse(xhr.responseText));
+                        } else {
+                            reject(new Error('Upload failed'));
+                        }
+                    };
+                    xhr.onerror = () => reject(new Error('Upload error'));
+                    xhr.send(fd);
+                });
+
+                if (!result.secure_url) throw new Error('No URL returned');
+
+                productVideoUrl = result.secure_url;
+                updateProductVideoPreview(productVideoUrl);
+                showToast('✅ تم رفع الفيديو بنجاح');
+            } catch (e) {
+                showToast('❌ فشل رفع الفيديو: ' + e.message, 'error');
+            } finally {
+                progressWrap.style.display = 'none';
+                document.getElementById('productVideoFileInput').value = '';
+            }
+        }
+
+        async function handleHeroVideoUpload(files) {
+            if (!files || !files.length) return;
+            const file = files[0];
+
+            // Validate file
+            if (!file.type.startsWith('video/')) {
+                showToast('يرجى اختيار ملف فيديو', 'error');
+                return;
+            }
+            if (file.size > 100 * 1024 * 1024) {
+                showToast('حجم الفيديو يتجاوز 100MB', 'error');
+                return;
+            }
+
+            const progressWrap = document.getElementById('heroVideoProgress');
+            const progressBar = document.getElementById('heroVideoProgressBar');
+            const progressText = document.getElementById('heroVideoProgressText');
+            progressWrap.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressText.textContent = '0%';
+
+            try {
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('upload_preset', UPLOAD_PRESET);
+                fd.append('resource_type', 'video');
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`);
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const pct = Math.round((e.loaded / e.total) * 100);
+                        progressBar.style.width = pct + '%';
+                        progressText.textContent = pct + '%';
+                    }
+                };
+
+                const result = await new Promise((resolve, reject) => {
+                    xhr.onload = () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            resolve(JSON.parse(xhr.responseText));
+                        } else {
+                            reject(new Error('Upload failed'));
+                        }
+                    };
+                    xhr.onerror = () => reject(new Error('Upload error'));
+                    xhr.send(fd);
+                });
+
+                if (!result.secure_url) throw new Error('No URL returned');
+
+                await db.ref('settings/heroVideo').set(result.secure_url);
+                showToast('✅ تم رفع وتحديث الفيديو بنجاح');
+            } catch (e) {
+                showToast('❌ فشل رفع الفيديو: ' + e.message, 'error');
+            } finally {
+                progressWrap.style.display = 'none';
+                document.getElementById('heroVideoFileInput').value = '';
+            }
+        }
+
+        async function saveHeroVideoUrl() {
+            const url = document.getElementById('heroVideoUrlInput').value.trim();
+            if (!url) {
+                showToast('يرجى إدخال رابط الفيديو', 'error');
+                return;
+            }
+            try {
+                await db.ref('settings/heroVideo').set(url);
+                showToast('✅ تم حفظ رابط الفيديو بنجاح');
+                document.getElementById('heroVideoUrlInput').value = '';
+            } catch (e) {
+                showToast('❌ خطأ: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteHeroVideo() {
+            if (!confirm('هل أنت متأكد من حذف الفيديو؟ سيتم الرجوع إلى الفيديو الافتراضي.')) return;
+            try {
+                await db.ref('settings/heroVideo').remove();
+                showToast('تم حذف الفيديو');
+            } catch (e) {
+                showToast('❌ خطأ: ' + e.message, 'error');
+            }
+        }
+
+        // ══════ GOOGLE SHEETS INTEGRATION ══════
+        let currentGSheetUrl = '';
+
+        // Load GSheet URL from Firebase
+        db.ref('settings/googleSheetsUrl').on('value', snap => {
+            currentGSheetUrl = snap.val() || '';
+            updateGSheetUI(currentGSheetUrl);
+        });
+
+        function updateGSheetUI(url) {
+            const input = document.getElementById('gsheetUrlInput');
+            const dot = document.getElementById('gsheetDot');
+            const statusText = document.getElementById('gsheetStatusText');
+            const removeWrap = document.getElementById('gsheetRemoveWrap');
+
+            if (url) {
+                input.value = url;
+                dot.style.background = '#0f9d58';
+                statusText.textContent = 'متصل بالجدول';
+                removeWrap.style.display = 'block';
+            } else {
+                input.value = '';
+                dot.style.background = '#555';
+                statusText.textContent = 'غير متصل';
+                removeWrap.style.display = 'none';
+            }
+        }
+
+        async function saveGSheetUrl() {
+            const url = document.getElementById('gsheetUrlInput').value.trim();
+            if (!url) {
+                showToast('يرجى إدخال رابط صالح', 'error');
+                return;
+            }
+            if (!url.startsWith('https://script.google.com/')) {
+                showToast('يجب أن يبدأ الرابط بـ https://script.google.com/', 'error');
+                return;
+            }
+            try {
+                await db.ref('settings/googleSheetsUrl').set(url);
+                showToast('✅ تم حفظ الرابط بنجاح');
+            } catch(e) {
+                showToast('❌ خطأ في الحفظ: ' + e.message, 'error');
+            }
+        }
+
+        async function removeGSheetUrl() {
+            if (!confirm('هل أنت متأكد من إلغاء ربط جدول Google Sheets؟')) return;
+            try {
+                await db.ref('settings/googleSheetsUrl').remove();
+                showToast('تم إلغاء الربط');
+            } catch(e) {
+                showToast('❌ خطأ: ' + e.message, 'error');
+            }
+        }
+
+        async function testGSheetConnection() {
+            if (!currentGSheetUrl) {
+                showToast('يرجى حفظ الرابط أولاً قبل الاختبار', 'error');
+                return;
+            }
+            showToast('جاري اختبار الاتصال...');
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                
+                // Using mode: 'no-cors' because Apps Script redirects don't support CORS directly on simple GETs.
+                // If the fetch succeeds (doesn't throw a network error), the script is reachable.
+                await fetch(currentGSheetUrl, {
+                    method: 'GET',
+                    mode: 'no-cors',
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                
+                showToast('✅ الاتصال ناجح! الجدول جاهز لاستلام الطلبات');
+            } catch(e) {
+                showToast('❌ فشل الاتصال. تأكد من نشر النص البرمجي كـ Web App والسماح بالوصول للجميع (Anyone)', 'error');
+                console.error(e);
+            }
+        }
+
+        // ══════ PWA SERVICE WORKER ══════
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(reg => console.log('[PWA] Service Worker registered:', reg.scope))
+                    .catch(err => console.warn('[PWA] SW registration failed:', err));
+            });
+        }
+
+        // PWA Install Prompt
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Show install button in header
+            const installBtn = document.getElementById('pwaInstallBtn');
+            if (installBtn) installBtn.style.display = 'flex';
+        });
+
+        function installPWA() {
+            if (!deferredPrompt) {
+                showToast('افتح الصفحة في Chrome ثم اختر "إضافة إلى الشاشة الرئيسية"');
+                return;
+            }
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(choice => {
+                if (choice.outcome === 'accepted') {
+                    showToast('✅ تم تثبيت التطبيق بنجاح!');
+                }
+                deferredPrompt = null;
+                const installBtn = document.getElementById('pwaInstallBtn');
+                if (installBtn) installBtn.style.display = 'none';
+            });
+        }
+
+        window.addEventListener('appinstalled', () => {
+            showToast('✅ التطبيق مثبت على جهازك');
+            deferredPrompt = null;
+            const installBtn = document.getElementById('pwaInstallBtn');
+            if (installBtn) installBtn.style.display = 'none';
+        });
     </script>
 </body>
-                                                       </html>
+</html>
