@@ -284,8 +284,8 @@
     
     /* ── LEFT PANEL CONTENT ── */
     .pm-body { padding: 24px 22px 12px; flex: 1; }
-    .pm-cat { font-size: 11px; color: var(--gray-600); font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; }
-    .pm-title { font-size: 20px; font-weight: 900; line-height: 1.35; margin-bottom: 10px; }
+    .pm-cat { font-family: 'Designer', 'Cinzel', 'Cormorant Garamond', serif; font-size: 9.5px; color: var(--gray-600); font-weight: normal; letter-spacing: 2px; margin-bottom: 6px; font-style: normal !important; }
+    .pm-title { font-family: 'Designer', 'Cinzel', 'Cormorant Garamond', serif; font-size: 20px; font-weight: normal; letter-spacing: 1px; line-height: 1.35; margin-bottom: 10px; font-style: normal !important; }
     .pm-price-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
     .pm-price-new { font-size: 22px; font-weight: 900; }
     .pm-price-old { font-size: 14px; color: var(--gray-400); text-decoration: line-through; }
@@ -1269,10 +1269,6 @@
               <img id="pmSummaryImg" src="" style="width:32px;height:32px;border-radius:6px;object-fit:cover;" onerror="this.style.display='none'">
               <span style="background:#eee;border-radius:20px;font-size:10px;font-weight:800;padding:2px 8px;" id="pmSummaryQtyBadge">×1</span>
             </div>
-          </div>
-          <div class="pm-summary-row">
-            <span class="pm-summary-label">🚚 سعر التوصيل</span>
-            <button type="button" style="background:#111;color:white;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;font-family:'Cairo',sans-serif;" id="pmSummaryWilayaBtn" onclick="document.getElementById('pmWilaya').focus()">اختر الولاية</button>
           </div>
           <div class="pm-summary-total">
             <span>المجموع</span>
