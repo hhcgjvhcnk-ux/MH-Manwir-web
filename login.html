@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>تسجيل الدخول | MH MNOWIR Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700;800&family=Bebas+Neue&family=Montserrat:wght@800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  
+  <!-- Firebase SDKs (v8 compat) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <style>
+    @font-face {
+      font-family: 'Designer';
+      src: url('Designer.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Tajawal', 'Cairo', sans-serif;
+    }
+
+    body {
+      background: #0a0a0c;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Subtle background glow effect */
+    body::before {
+      content: '';
+      position: absolute;
+      width: 350px;
+      height: 350px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, rgba(0,0,0,0) 70%);
+      top: 10%;
+      right: 15%;
+      pointer-events: none;
+      filter: blur(40px);
+    }
+
+    body::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, rgba(0,0,0,0) 70%);
+      bottom: 10%;
+      left: 10%;
+      pointer-events: none;
+      filter: blur(50px);
+    }
+
+    .login-wrap {
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .login-emblem {
+      width: 84px;
+      height: 84px;
+      margin: 0 auto 24px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-emblem-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px dashed rgba(212, 175, 55, 0.4);
+      animation: spinRing 25s linear infinite;
+    }
+
+    @keyframes spinRing {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .login-emblem-inner {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #18181c 0%, #0d0d0f 100%);
+      border: 1.5px solid rgba(212, 175, 55, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Designer', 'Cinzel', 'Cormorant Garamond', serif;
+      font-size: 24px;
+      font-weight: 900;
+      color: #d4af37;
+      letter-spacing: 2px;
+      box-shadow: 0 0 25px rgba(212, 175, 55, 0.2);
+    }
+
+    .login-card {
+      background: rgba(22, 22, 28, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 32px 28px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      text-align: center;
+    }
+
+    .login-title {
+      font-family: 'Designer', 'Cinzel', 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 3px;
+      margin-bottom: 4px;
+    }
+
+    .login-sub {
+      font-size: 13px;
+      color: #8a8a9e;
+      margin-bottom: 28px;
+      font-weight: 500;
+    }
+
+    .login-field {
+      position: relative;
+      margin-bottom: 18px;
+      text-align: right;
+    }
+
+    .login-field-icon {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      right: 16px;
+      color: #666;
+      font-size: 16px;
+      transition: color 0.3s;
+    }
+
+    .login-field input {
+      width: 100%;
+      background: rgba(10, 10, 14, 0.8);
+      border: 1.5px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 14px 44px 14px 16px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .login-field input:focus {
+      border-color: #d4af37;
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+    }
+
+    .login-field input:focus + .login-field-icon,
+    .login-field input:not(:placeholder-shown) ~ .login-field-icon {
+      color: #d4af37;
+    }
+
+    .login-error {
+      color: #ff5252;
+      font-size: 13px;
+      min-height: 22px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: opacity 0.3s;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%);
+      color: #000;
+      font-weight: 700;
+      font-size: 15px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+      background: linear-gradient(135deg, #e5be3e 0%, #b88d0d 100%);
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .back-store {
+      margin-top: 22px;
+      display: inline-block;
+      color: #8a8a9e;
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.3s;
+    }
+
+    .back-store:hover {
+      color: #d4af37;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-wrap">
+    <div class="login-emblem">
+      <div class="login-emblem-ring"></div>
+      <div class="login-emblem-inner">MH</div>
+    </div>
+    <div class="login-card">
+      <div class="login-title">MH MNOWIR</div>
+      <div class="login-sub">تسجيل الدخول إلى لوحة التحكم</div>
+
+      <form id="loginForm" onsubmit="event.preventDefault(); handleLogin();">
+        <div class="login-field">
+          <input type="email" id="email" placeholder="البريد الإلكتروني" required autocomplete="email" />
+          <i class="fas fa-envelope login-field-icon"></i>
+        </div>
+
+        <div class="login-field">
+          <input type="password" id="password" placeholder="كلمة المرور" required autocomplete="current-password" />
+          <i class="fas fa-lock login-field-icon"></i>
+        </div>
+
+        <div class="login-error" id="loginError"></div>
+
+        <button type="submit" class="btn-submit" id="submitBtn">
+          <span class="spinner" id="spinner"></span>
+          <span id="btnText">تسجيل الدخول</span>
+          <i class="fas fa-arrow-left" id="btnIcon"></i>
+        </button>
+      </form>
+
+      <a href="index.html" class="back-store">
+        <i class="fas fa-store"></i> العودة إلى المتجر
+      </a>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCt0x0QBq3NyDCrn0MDTxJFmbYNCyOxYTs",
+      authDomain: "manwir-688a1.firebaseapp.com",
+      projectId: "manwir-688a1",
+      storageBucket: "manwir-688a1.firebasestorage.app",
+      messagingSenderId: "100869260498",
+      appId: "1:100869260498:web:b6ac3425c31bbe08f7190b",
+      measurementId: "G-GHTKB5Z2NR"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+
+    // Check if user is already logged in
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        window.location.href = 'admin.html';
+      }
+    });
+
+    async function handleLogin() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const errorEl = document.getElementById('loginError');
+      const submitBtn = document.getElementById('submitBtn');
+      const spinner = document.getElementById('spinner');
+      const btnText = document.getElementById('btnText');
+      const btnIcon = document.getElementById('btnIcon');
+
+      errorEl.innerHTML = '';
+      if (!email || !password) {
+        errorEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> يرجى ملء كافة الحقول';
+        return;
+      }
+
+      // UI state loading
+      submitBtn.disabled = true;
+      spinner.style.display = 'inline-block';
+      btnIcon.style.display = 'none';
+      btnText.textContent = 'جاري التحقق...';
+
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+        btnText.textContent = 'تم النجاح! جاري التوجيه...';
+        window.location.href = 'admin.html';
+      } catch (error) {
+        console.error("Login Error:", error);
+        let msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+        const code = error.code || '';
+        const message = error.message || '';
+
+        if (code === 'auth/invalid-email') {
+          msg = 'البريد الإلكتروني غير صالح أو مكتوب بصيغة خاطئة';
+        } else if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential' || message.includes('INVALID_LOGIN_CREDENTIALS')) {
+          msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة، أو لم يتم إنشاء حساب المسؤول في Firebase بعد';
+        } else if (code === 'auth/operation-not-allowed') {
+          msg = 'ميزة البريد وكلمة المرور غير مفعلة في منصة Firebase. يرجى تفعيلها من الـ Console';
+        } else if (code === 'auth/too-many-requests') {
+          msg = 'محاولات كثيرة خاطئة، يرجى المحاولة لاحقاً';
+        } else if (code === 'auth/network-request-failed') {
+          msg = 'فشل الاتصال بالشبكة، تحقق من اتصالك بالإنترنت';
+        }
+
+        errorEl.innerHTML = `<i class="fas fa-times-circle"></i> ${msg}`;
+        submitBtn.disabled = false;
+        spinner.style.display = 'none';
+        btnIcon.style.display = 'inline-block';
+        btnText.textContent = 'تسجيل الدخول';
+      }
+    }
+  </script>
+</body>
+</html>

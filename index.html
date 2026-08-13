@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <style>
     @font-face {
       font-family: 'Designer';
@@ -1298,7 +1299,8 @@
 
   const firebaseConfig = { apiKey: "AIzaSyCt0x0QBq3NyDCrn0MDTxJFmbYNCyOxYTs", authDomain: "manwir-688a1.firebaseapp.com", databaseURL: "https://manwir-688a1-default-rtdb.firebaseio.com", projectId: "manwir-688a1", storageBucket: "manwir-688a1.firebasestorage.app", messagingSenderId: "100869260498", appId: "1:100869260498:web:b6ac3425c31bbe08f7190b", measurementId: "G-GHTKB5Z2NR" };
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+  const db = firebase.firestore();
+  const rtdb = firebase.database();
 
   let products = [];
   let cart = [];
@@ -1308,8 +1310,22 @@
 
   // Google Sheets configuration sync
   let googleSheetsUrl = '';
-  db.ref('settings/googleSheetsUrl').on('value', snap => {
-    googleSheetsUrl = snap.val() || '';
+  let rtdbGoogleSheetsListening = false;
+  function listenToRTDBGoogleSheets() {
+    if (rtdbGoogleSheetsListening) return;
+    rtdbGoogleSheetsListening = true;
+    rtdb.ref('settings/googleSheetsUrl').on('value', snap => {
+      googleSheetsUrl = snap.val() || '';
+    });
+  }
+  db.collection('settings').doc('googleSheetsUrl').onSnapshot(doc => {
+    if (doc.exists && doc.data().url) {
+      googleSheetsUrl = doc.data().url;
+    } else {
+      listenToRTDBGoogleSheets();
+    }
+  }, () => {
+    listenToRTDBGoogleSheets();
   });
 
   async function sendOrderToGoogleSheets(orderData) {
@@ -2118,7 +2134,9 @@
         total: total
       };
       
-      await db.ref('orders').push().set({ ...orderPayload, productName: p.name, createdAt: Date.now(), done: false });
+      const newOrderPayload = { ...orderPayload, productName: p.name, createdAt: Date.now(), done: false };
+      await db.collection('orders').add(newOrderPayload).catch(e => console.warn("Firestore order write error:", e));
+      rtdb.ref('orders').push().set(newOrderPayload).catch(e => console.warn("RTDB order write error:", e));
       sendOrderToGoogleSheets(orderPayload);
       
       showSuccessModal();
@@ -2198,7 +2216,9 @@
         total
       };
 
-      await db.ref('orders').push().set({ ...orderPayload, createdAt: Date.now(), done: false });
+      const newOrderPayload = { ...orderPayload, createdAt: Date.now(), done: false };
+      await db.collection('orders').add(newOrderPayload).catch(e => console.warn("Firestore order write error:", e));
+      rtdb.ref('orders').push().set(newOrderPayload).catch(e => console.warn("RTDB order write error:", e));
       sendOrderToGoogleSheets(orderPayload);
       
       showSuccessModal();
@@ -2225,34 +2245,38 @@
   const searchInput = document.getElementById('globalSearch');
   searchInput.addEventListener('input', (e) => { renderFiltered(e.target.value.trim().toLowerCase()); });
 
-  db.ref('products').on('value', snap => {
-    const data = snap.val();
-    const newProducts = [];
-    if (data) {
-      Object.entries(data).forEach(([key, p]) => {
-        newProducts.push({
-          id: key,
-          name: p.name || 'منتج',
-          subtitle: p.subtitle || 'MH MANWIR',
-          price: parseFloat(p.price) || 0,
-          oldPrice: parseFloat(p.oldPrice) || 0,
-          price2: parseFloat(p.price2) || 0,
-          price3: parseFloat(p.price3) || 0,
-          description: p.description || '',
-          images: Array.isArray(p.images) ? p.images : (p.image ? [p.image] : ['https://placehold.co/400x400/eee/aaa?text=img']),
-          image: (Array.isArray(p.images) && p.images[0]) || p.image || 'https://placehold.co/400x400/eee/aaa?text=img',
-          sizes: Array.isArray(p.sizes) ? p.sizes : [],
-          colors: Array.isArray(p.colors) ? p.colors : [],
-          videoUrl: p.videoUrl || ''
-        });
-      });
-    }
+  let loadedFromFirestore = false;
+  let rtdbListening = false;
+
+  function parseProductItem(id, p) {
+    return {
+      id: id,
+      name: p.name || 'منتج',
+      subtitle: p.subtitle || 'MH MANWIR',
+      price: parseFloat(p.price) || 0,
+      oldPrice: parseFloat(p.oldPrice) || 0,
+      price2: parseFloat(p.price2) || 0,
+      price3: parseFloat(p.price3) || 0,
+      description: p.description || '',
+      images: Array.isArray(p.images) ? p.images : (p.image ? [p.image] : ['https://placehold.co/400x400/eee/aaa?text=img']),
+      image: (Array.isArray(p.images) && p.images[0]) || p.image || 'https://placehold.co/400x400/eee/aaa?text=img',
+      sizes: Array.isArray(p.sizes) ? p.sizes : [],
+      colors: Array.isArray(p.colors) ? p.colors : [],
+      videoUrl: p.videoUrl || ''
+    };
+  }
+
+  let __lastProductsHash = '';
+  function updateProductList(newProducts) {
+    const jsonStr = JSON.stringify(newProducts);
+    if (__lastProductsHash === jsonStr) return;
+    __lastProductsHash = jsonStr;
+
     allProducts = newProducts;
     const currentSearch = searchInput.value.trim().toLowerCase();
     if (currentSearch) renderFiltered(currentSearch);
     else { products = [...allProducts]; buildCards(); }
-    
-    // فتح المنتج مباشرة إذا كان هناك ?product=ID في الرابط
+
     const urlParams = new URLSearchParams(window.location.search);
     const directId = urlParams.get('product');
     if (directId && !window.__directOpened) {
@@ -2262,6 +2286,37 @@
         openProductModal(target);
       }
     }
+  }
+
+  function listenToRTDBProducts() {
+    if (rtdbListening) return;
+    rtdbListening = true;
+    rtdb.ref('products').on('value', snap => {
+      const data = snap.val();
+      if (data && !loadedFromFirestore) {
+        const newProducts = [];
+        Object.entries(data).forEach(([key, p]) => {
+          newProducts.push(parseProductItem(key, p));
+        });
+        updateProductList(newProducts);
+      }
+    });
+  }
+
+  db.collection('products').onSnapshot(snap => {
+    if (snap && !snap.empty) {
+      loadedFromFirestore = true;
+      const newProducts = [];
+      snap.forEach(doc => {
+        newProducts.push(parseProductItem(doc.id, doc.data()));
+      });
+      updateProductList(newProducts);
+    } else {
+      listenToRTDBProducts();
+    }
+  }, error => {
+    console.warn("Firestore error, switching to RTDB fallback:", error);
+    listenToRTDBProducts();
   });
 
   // ══════ WISHLIST / FAVORITES LOGIC ══════
@@ -2334,23 +2389,43 @@
   updateFavoritesUI();
 
   // ══════ DYNAMIC HERO VIDEO ══════
-  db.ref('settings/heroVideo').on('value', snap => {
-    const url = snap.val();
+  let currentHeroVideoUrl = null;
+  function setHeroVideoSrc(url) {
     const video = document.getElementById('heroVideo');
     const source = document.getElementById('heroVideoSource');
-    if (video && source) {
-      if (url) {
-        source.src = url;
-        // Detect type from URL
-        if (url.includes('.webm')) source.type = 'video/webm';
-        else source.type = 'video/mp4';
-      } else {
-        source.src = 'hero.mp4';
-        source.type = 'video/mp4';
-      }
-      video.load();
-      video.play().catch(() => {});
+    if (!video) return;
+    const targetUrl = url || 'hero.mp4';
+    if (currentHeroVideoUrl === targetUrl) return;
+    currentHeroVideoUrl = targetUrl;
+
+    if (source) source.src = targetUrl;
+    video.src = targetUrl;
+    video.muted = true;
+    video.defaultMuted = true;
+    video.setAttribute('muted', '');
+    video.setAttribute('playsinline', '');
+    video.load();
+    const p = video.play();
+    if (p !== undefined) p.catch(() => {});
+  }
+
+  let rtdbHeroVideoListening = false;
+  function listenToRTDBHeroVideo() {
+    if (rtdbHeroVideoListening) return;
+    rtdbHeroVideoListening = true;
+    rtdb.ref('settings/heroVideo').on('value', snap => {
+      setHeroVideoSrc(snap.val());
+    });
+  }
+
+  db.collection('settings').doc('heroVideo').onSnapshot(doc => {
+    if (doc.exists && doc.data().url) {
+      setHeroVideoSrc(doc.data().url);
+    } else {
+      listenToRTDBHeroVideo();
     }
+  }, () => {
+    listenToRTDBHeroVideo();
   });
 
   function escapeHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }

@@ -4,10 +4,15 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
     <title>MH MNOWIR — لوحة التحكم</title>
-    <link rel="manifest" href="/manifest.json"/>
-    <meta name="theme-color" content="#08080a"/>
+    <link rel="manifest" href="manifest.json"/>
+    <link rel="icon" type="image/png" href="logo.png"/>
+    <link rel="apple-touch-icon" href="logo.png"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
     <meta name="apple-mobile-web-app-capable" content="yes"/>
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="apple-mobile-web-app-title" content="MH Admin"/>
+    <meta name="application-name" content="MH Admin"/>
+    <meta name="theme-color" content="#08080a"/>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&family=Tajawal:wght@300;400;500;700;800&family=Oswald:wght@600;700&family=Jost:wght@400;500;600;700;800&family=Cinzel:wght@500;700;800&family=Cormorant+Garamond:wght@400;600;700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap" rel="stylesheet"/>
@@ -16,9 +21,19 @@
     </script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js">
     </script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js">
+    </script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js">
     </script>
     <style>
+        @font-face {
+            font-family: 'Designer';
+            src: url('Designer.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
         *,
         *::before,
         *::after {
@@ -156,7 +171,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Cinzel', 'Cormorant Garamond', 'Playfair Display', serif;
+            font-family: 'Designer', 'Cinzel', 'Cormorant Garamond', serif;
             font-size: 17px;
             font-weight: 700;
             color: white;
@@ -180,7 +195,7 @@
             }
         }
         .login-title {
-            font-family: 'Cinzel', 'Cormorant Garamond', 'Playfair Display', serif;
+            font-family: 'Designer', 'Cinzel', 'Cormorant Garamond', serif;
             font-size: 26px;
             font-weight: 700;
             letter-spacing: 2px;
@@ -1387,6 +1402,9 @@
                 <button class="btn btn-black btn-lg btn-full" style="margin-top:6px;" onclick="attemptLogin()">
                     <i class="fas fa-arrow-left"></i> الدخول
                 </button>
+                <div style="margin-top:14px;text-align:center;">
+                    <a href="login.html" style="color:#8a8a9e;font-size:13px;text-decoration:none;"><i class="fas fa-external-link-alt"></i> الانتقال لصفحة تسجيل الدخول المستقلة</a>
+                </div>
             </div>
         </div>
     </div>
@@ -1445,6 +1463,7 @@
                                 <button class="btn btn-outline" onclick="showSection('add-product')"><i class="fas fa-plus-circle"></i> إضافة منتج</button>
                                 <button class="btn btn-outline" onclick="showSection('orders')"><i class="fas fa-list"></i> عرض الطلبات</button>
                                 <button class="btn btn-green" onclick="markAllDone()"><i class="fas fa-check-double"></i> تعليم الكل كمنجز</button>
+                                <button class="btn btn-outline" style="color:#d4af37;border-color:#d4af37;" onclick="syncRTDBToFirestore()"><i class="fas fa-sync"></i> مزامنة البيانات القديمة إلى Firestore</button>
                             </div>
                         </div>
                     </div>
@@ -1664,7 +1683,8 @@
             storageBucket: "manwir-688a1.firebasestorage.app", messagingSenderId: "100869260498",
             appId: "1:100869260498:web:b6ac3425c31bbe08f7190b" };
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        const db = firebase.firestore();
+        const rtdb = firebase.database();
 
         let selectedColors = [],
             selectedSizes = [],
@@ -1692,15 +1712,17 @@
                     showToast('تم تسجيل الدخول بنجاح!');
                 })
                 .catch((error) => {
-                    console.error(error);
-                    let errMsg = 'حدث خطأ غير متوقع: ' + error.message;
-                    if (error.code === 'auth/invalid-email') {
+                    console.error("Auth Error:", error);
+                    let errMsg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+                    const code = error.code || '';
+                    const message = error.message || '';
+                    if (code === 'auth/invalid-email') {
                         errMsg = 'البريد الإلكتروني غير صالح أو مكتوب بصيغة خاطئة';
-                    } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                        errMsg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
-                    } else if (error.code === 'auth/operation-not-allowed') {
+                    } else if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential' || message.includes('INVALID_LOGIN_CREDENTIALS')) {
+                        errMsg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة، أو لم يتم إنشاء هذا المستخدم في Firebase Console بعد';
+                    } else if (code === 'auth/operation-not-allowed') {
                         errMsg = 'ميزة البريد وكلمة المرور غير مفعلة في منصة Firebase. يرجى تفعيلها من الـ Console';
-                    } else if (error.code === 'auth/network-request-failed') {
+                    } else if (code === 'auth/network-request-failed') {
                         errMsg = 'فشل الاتصال بالإنترنت، يرجى التحقق من الشبكة';
                     }
                     errorEl.innerHTML = `<i class="fas fa-times-circle"></i> ${errMsg}`;
@@ -1734,18 +1756,110 @@
             });
         }
 
+        let loadedProductsFS = false;
+        let loadedOrdersFS = false;
+
         function loadFirebaseData() {
-            db.ref('products').on('value', snap => {
-                allProducts = snap.val() || {};
-                Object.keys(allProducts).forEach(k => allProductsData[k] = allProducts[k]);
-                document.getElementById('statProducts').innerText = Object.keys(allProducts).length;
-                document.getElementById('productsCount').innerText = Object.keys(allProducts).length + ' منتج';
-                renderProductsList(allProducts);
+            // Products
+            db.collection('products').onSnapshot(snap => {
+                if (snap && !snap.empty) {
+                    loadedProductsFS = true;
+                    allProducts = {};
+                    snap.forEach(doc => {
+                        allProducts[doc.id] = { id: doc.id, ...doc.data() };
+                        allProductsData[doc.id] = { id: doc.id, ...doc.data() };
+                    });
+                    document.getElementById('statProducts').innerText = Object.keys(allProducts).length;
+                    document.getElementById('productsCount').innerText = Object.keys(allProducts).length + ' منتج';
+                    renderProductsList(allProducts);
+                } else if (!loadedProductsFS) {
+                    listenToRTDBProductsAdmin();
+                }
+            }, error => {
+                console.warn("Firestore products error, fallback to RTDB:", error);
+                listenToRTDBProductsAdmin();
             });
-            db.ref('orders').on('value', snap => {
-                allOrders = snap.val() || {};
-                renderOrdersTable(allOrders);
+
+            // Orders
+            db.collection('orders').onSnapshot(snap => {
+                if (snap && !snap.empty) {
+                    loadedOrdersFS = true;
+                    allOrders = {};
+                    snap.forEach(doc => {
+                        allOrders[doc.id] = { id: doc.id, ...doc.data() };
+                    });
+                    renderOrdersTable(allOrders);
+                } else if (!loadedOrdersFS) {
+                    listenToRTDBOrdersAdmin();
+                }
+            }, error => {
+                console.warn("Firestore orders error, fallback to RTDB:", error);
+                listenToRTDBOrdersAdmin();
             });
+        }
+
+        let rtdbProductsAdminListening = false;
+        function listenToRTDBProductsAdmin() {
+            if (rtdbProductsAdminListening) return;
+            rtdbProductsAdminListening = true;
+            rtdb.ref('products').on('value', snap => {
+                if (!loadedProductsFS) {
+                    allProducts = snap.val() || {};
+                    Object.keys(allProducts).forEach(k => allProductsData[k] = allProducts[k]);
+                    document.getElementById('statProducts').innerText = Object.keys(allProducts).length;
+                    document.getElementById('productsCount').innerText = Object.keys(allProducts).length + ' منتج';
+                    renderProductsList(allProducts);
+                }
+            });
+        }
+
+        let rtdbOrdersAdminListening = false;
+        function listenToRTDBOrdersAdmin() {
+            if (rtdbOrdersAdminListening) return;
+            rtdbOrdersAdminListening = true;
+            rtdb.ref('orders').on('value', snap => {
+                if (!loadedOrdersFS) {
+                    allOrders = snap.val() || {};
+                    renderOrdersTable(allOrders);
+                }
+            });
+        }
+
+        async function syncRTDBToFirestore() {
+            try {
+                showToast('⏳ جاري المزامنة مع Firestore...');
+                const prodSnap = await rtdb.ref('products').once('value');
+                const prods = prodSnap.val() || {};
+                const batch = db.batch();
+                let prodCount = 0;
+                Object.entries(prods).forEach(([k, p]) => {
+                    batch.set(db.collection('products').doc(k), p, { merge: true });
+                    prodCount++;
+                });
+
+                const orderSnap = await rtdb.ref('orders').once('value');
+                const orders = orderSnap.val() || {};
+                let orderCount = 0;
+                Object.entries(orders).forEach(([k, o]) => {
+                    batch.set(db.collection('orders').doc(k), o, { merge: true });
+                    orderCount++;
+                });
+
+                const heroSnap = await rtdb.ref('settings/heroVideo').once('value');
+                if (heroSnap.exists() && heroSnap.val()) {
+                    batch.set(db.collection('settings').doc('heroVideo'), { url: heroSnap.val() }, { merge: true });
+                }
+
+                const gsheetSnap = await rtdb.ref('settings/googleSheetsUrl').once('value');
+                if (gsheetSnap.exists() && gsheetSnap.val()) {
+                    batch.set(db.collection('settings').doc('googleSheetsUrl'), { url: gsheetSnap.val() }, { merge: true });
+                }
+
+                await batch.commit();
+                showToast(`✅ تم نقل ${prodCount} منتج و ${orderCount} طلب والإعدادات إلى Firestore!`);
+            } catch (err) {
+                showToast('❌ خطأ في المزامنة: ' + err.message, 'error');
+            }
         }
 
         const CLOUD_NAME = 'ddeace4bi',
@@ -1893,8 +2007,15 @@
             };
 
             try {
-                if (editingProductKey) await db.ref('products/' + editingProductKey).update(productData);
-                else await db.ref('products').push(productData);
+                if (editingProductKey) {
+                    await db.collection('products').doc(editingProductKey).set(productData, { merge: true }).catch(e => console.warn(e));
+                    await rtdb.ref('products/' + editingProductKey).update(productData).catch(e => console.warn(e));
+                } else {
+                    const newDocRef = db.collection('products').doc();
+                    const newKey = newDocRef.id;
+                    await newDocRef.set(productData).catch(e => console.warn(e));
+                    await rtdb.ref('products/' + newKey).set(productData).catch(e => console.warn(e));
+                }
                 showToast('تم الحفظ');
                 resetForm();
                 showSection('products');
@@ -1980,9 +2101,11 @@
                 btn.addEventListener('click', (e) => {
                     const key = btn.dataset.key;
                     const product = allProductsData[key];
-                    askDelete(`حذف ${product?.name || 'المنتج'}؟`, () => { db.ref('products/' + key)
-                        .remove();
-                        showToast('تم الحذف'); });
+                    askDelete(`حذف ${product?.name || 'المنتج'}؟`, async () => {
+                        await db.collection('products').doc(key).delete().catch(err => console.warn(err));
+                        await rtdb.ref('products/' + key).remove().catch(err => console.warn(err));
+                        showToast('تم الحذف');
+                    });
                 });
             });
         }
@@ -2021,16 +2144,36 @@
             }).join('');
         }
 
-        function toggleOrderDone(key) { db.ref('orders/' + key + '/done').set(!allOrders[key]?.done); }
+        function toggleOrderDone(key) {
+            const newDone = !allOrders[key]?.done;
+            db.collection('orders').doc(key).update({ done: newDone }).catch(e => console.warn(e));
+            rtdb.ref('orders/' + key + '/done').set(newDone).catch(e => console.warn(e));
+        }
 
-        function deleteOrder(key) { askDelete('حذف الطلب؟', () => db.ref('orders/' + key).remove()); }
+        function deleteOrder(key) {
+            askDelete('حذف الطلب؟', () => {
+                db.collection('orders').doc(key).delete().catch(e => console.warn(e));
+                rtdb.ref('orders/' + key).remove().catch(e => console.warn(e));
+            });
+        }
 
-        function markAllDone() {
+        async function markAllDone() {
+            const batch = db.batch();
             const updates = {};
-            Object.keys(allOrders).forEach(k => { if (!allOrders[k].done) updates['orders/' + k + '/done'] =
-                true; });
-            if (!Object.keys(updates).length) showToast('كلها منجزة');
-            else db.ref().update(updates);
+            let count = 0;
+            Object.keys(allOrders).forEach(k => {
+                if (!allOrders[k].done) {
+                    batch.update(db.collection('orders').doc(k), { done: true });
+                    updates['orders/' + k + '/done'] = true;
+                    count++;
+                }
+            });
+            if (!count) showToast('كلها منجزة');
+            else {
+                await batch.commit().catch(e => console.warn(e));
+                await rtdb.ref().update(updates).catch(e => console.warn(e));
+                showToast('تم تعليم الكل كمنجز');
+            }
         }
 
         function openOrderDetail(key) {
@@ -2111,11 +2254,21 @@
         // ══════ HERO VIDEO MANAGEMENT ══════
         let currentHeroVideoUrl = '';
 
-        // Load current hero video from Firebase
-        db.ref('settings/heroVideo').on('value', snap => {
-            const url = snap.val();
-            currentHeroVideoUrl = url || '';
-            updateHeroVideoPreview(currentHeroVideoUrl);
+        db.collection('settings').doc('heroVideo').onSnapshot(doc => {
+            if (doc.exists && doc.data().url) {
+                currentHeroVideoUrl = doc.data().url;
+                updateHeroVideoPreview(currentHeroVideoUrl);
+            } else {
+                rtdb.ref('settings/heroVideo').on('value', snap => {
+                    currentHeroVideoUrl = snap.val() || '';
+                    updateHeroVideoPreview(currentHeroVideoUrl);
+                });
+            }
+        }, () => {
+            rtdb.ref('settings/heroVideo').on('value', snap => {
+                currentHeroVideoUrl = snap.val() || '';
+                updateHeroVideoPreview(currentHeroVideoUrl);
+            });
         });
 
         function updateHeroVideoPreview(url) {
@@ -2273,7 +2426,8 @@
 
                 if (!result.secure_url) throw new Error('No URL returned');
 
-                await db.ref('settings/heroVideo').set(result.secure_url);
+                await db.collection('settings').doc('heroVideo').set({ url: result.secure_url }).catch(e => console.warn(e));
+                await rtdb.ref('settings/heroVideo').set(result.secure_url).catch(e => console.warn(e));
                 showToast('✅ تم رفع وتحديث الفيديو بنجاح');
             } catch (e) {
                 showToast('❌ فشل رفع الفيديو: ' + e.message, 'error');
@@ -2290,7 +2444,8 @@
                 return;
             }
             try {
-                await db.ref('settings/heroVideo').set(url);
+                await db.collection('settings').doc('heroVideo').set({ url: url }).catch(e => console.warn(e));
+                await rtdb.ref('settings/heroVideo').set(url).catch(e => console.warn(e));
                 showToast('✅ تم حفظ رابط الفيديو بنجاح');
                 document.getElementById('heroVideoUrlInput').value = '';
             } catch (e) {
@@ -2301,7 +2456,8 @@
         async function deleteHeroVideo() {
             if (!confirm('هل أنت متأكد من حذف الفيديو؟ سيتم الرجوع إلى الفيديو الافتراضي.')) return;
             try {
-                await db.ref('settings/heroVideo').remove();
+                await db.collection('settings').doc('heroVideo').delete().catch(e => console.warn(e));
+                await rtdb.ref('settings/heroVideo').remove().catch(e => console.warn(e));
                 showToast('تم حذف الفيديو');
             } catch (e) {
                 showToast('❌ خطأ: ' + e.message, 'error');
@@ -2311,10 +2467,21 @@
         // ══════ GOOGLE SHEETS INTEGRATION ══════
         let currentGSheetUrl = '';
 
-        // Load GSheet URL from Firebase
-        db.ref('settings/googleSheetsUrl').on('value', snap => {
-            currentGSheetUrl = snap.val() || '';
-            updateGSheetUI(currentGSheetUrl);
+        db.collection('settings').doc('googleSheetsUrl').onSnapshot(doc => {
+            if (doc.exists && doc.data().url) {
+                currentGSheetUrl = doc.data().url;
+                updateGSheetUI(currentGSheetUrl);
+            } else {
+                rtdb.ref('settings/googleSheetsUrl').on('value', snap => {
+                    currentGSheetUrl = snap.val() || '';
+                    updateGSheetUI(currentGSheetUrl);
+                });
+            }
+        }, () => {
+            rtdb.ref('settings/googleSheetsUrl').on('value', snap => {
+                currentGSheetUrl = snap.val() || '';
+                updateGSheetUI(currentGSheetUrl);
+            });
         });
 
         function updateGSheetUI(url) {
@@ -2347,7 +2514,7 @@
                 return;
             }
             try {
-                await db.ref('settings/googleSheetsUrl').set(url);
+                await db.collection('settings').doc('googleSheetsUrl').set({ url: url });
                 showToast('✅ تم حفظ الرابط بنجاح');
             } catch(e) {
                 showToast('❌ خطأ في الحفظ: ' + e.message, 'error');
@@ -2357,7 +2524,7 @@
         async function removeGSheetUrl() {
             if (!confirm('هل أنت متأكد من إلغاء ربط جدول Google Sheets؟')) return;
             try {
-                await db.ref('settings/googleSheetsUrl').remove();
+                await db.collection('settings').doc('googleSheetsUrl').delete();
                 showToast('تم إلغاء الربط');
             } catch(e) {
                 showToast('❌ خطأ: ' + e.message, 'error');

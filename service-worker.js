@@ -7,8 +7,10 @@ const CACHE_NAME = 'mh-manwir-admin-v1';
 // الملفات الأساسية التي سيتم تخزينها مؤقتاً
 const STATIC_ASSETS = [
   './admin.html',
+  './login.html',
   './manifest.json',
-  './logo.png'
+  './logo.png',
+  './Designer.otf'
 ];
 
 // ===== INSTALL =====
