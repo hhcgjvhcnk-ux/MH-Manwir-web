@@ -2288,32 +2288,37 @@
     }
   }
 
+  let fsProductsMap = {};
+  let rtdbProductsMap = {};
+
+  function mergeAndRenderProducts() {
+    const mergedMap = { ...rtdbProductsMap, ...fsProductsMap };
+    const newProducts = Object.values(mergedMap);
+    updateProductList(newProducts);
+  }
+
   function listenToRTDBProducts() {
     if (rtdbListening) return;
     rtdbListening = true;
     rtdb.ref('products').on('value', snap => {
-      const data = snap.val();
-      if (data && !loadedFromFirestore) {
-        const newProducts = [];
-        Object.entries(data).forEach(([key, p]) => {
-          newProducts.push(parseProductItem(key, p));
-        });
-        updateProductList(newProducts);
-      }
+      const data = snap.val() || {};
+      rtdbProductsMap = {};
+      Object.entries(data).forEach(([key, p]) => {
+        rtdbProductsMap[key] = parseProductItem(key, p);
+      });
+      mergeAndRenderProducts();
     });
   }
 
   db.collection('products').onSnapshot(snap => {
+    fsProductsMap = {};
     if (snap && !snap.empty) {
-      loadedFromFirestore = true;
-      const newProducts = [];
       snap.forEach(doc => {
-        newProducts.push(parseProductItem(doc.id, doc.data()));
+        fsProductsMap[doc.id] = parseProductItem(doc.id, doc.data());
       });
-      updateProductList(newProducts);
-    } else {
-      listenToRTDBProducts();
     }
+    mergeAndRenderProducts();
+    listenToRTDBProducts();
   }, error => {
     console.warn("Firestore error, switching to RTDB fallback:", error);
     listenToRTDBProducts();
@@ -2390,6 +2395,9 @@
 
   // ══════ DYNAMIC HERO VIDEO ══════
   let currentHeroVideoUrl = null;
+  let fsHeroVideoUrl = null;
+  let rtdbHeroVideoUrl = null;
+
   function setHeroVideoSrc(url) {
     const video = document.getElementById('heroVideo');
     const source = document.getElementById('heroVideoSource');
@@ -2409,21 +2417,29 @@
     if (p !== undefined) p.catch(() => {});
   }
 
+  function updateActiveHeroVideo() {
+    const finalUrl = fsHeroVideoUrl || rtdbHeroVideoUrl || '';
+    setHeroVideoSrc(finalUrl);
+  }
+
   let rtdbHeroVideoListening = false;
   function listenToRTDBHeroVideo() {
     if (rtdbHeroVideoListening) return;
     rtdbHeroVideoListening = true;
     rtdb.ref('settings/heroVideo').on('value', snap => {
-      setHeroVideoSrc(snap.val());
+      rtdbHeroVideoUrl = snap.val() || null;
+      updateActiveHeroVideo();
     });
   }
 
   db.collection('settings').doc('heroVideo').onSnapshot(doc => {
-    if (doc.exists && doc.data().url) {
-      setHeroVideoSrc(doc.data().url);
+    if (doc.exists && doc.data() && doc.data().url) {
+      fsHeroVideoUrl = doc.data().url;
     } else {
-      listenToRTDBHeroVideo();
+      fsHeroVideoUrl = null;
     }
+    updateActiveHeroVideo();
+    listenToRTDBHeroVideo();
   }, () => {
     listenToRTDBHeroVideo();
   });

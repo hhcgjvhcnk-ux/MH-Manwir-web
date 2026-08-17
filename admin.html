@@ -1756,25 +1756,35 @@
             });
         }
 
-        let loadedProductsFS = false;
-        let loadedOrdersFS = false;
+        let fsProductsAdmin = {};
+        let rtdbProductsAdmin = {};
+        let fsOrdersAdmin = {};
+        let rtdbOrdersAdmin = {};
+
+        function mergeAndRenderAdminProducts() {
+            allProducts = { ...rtdbProductsAdmin, ...fsProductsAdmin };
+            Object.keys(allProducts).forEach(k => allProductsData[k] = { id: k, ...allProducts[k] });
+            document.getElementById('statProducts').innerText = Object.keys(allProducts).length;
+            document.getElementById('productsCount').innerText = Object.keys(allProducts).length + ' منتج';
+            renderProductsList(allProducts);
+        }
+
+        function mergeAndRenderAdminOrders() {
+            allOrders = { ...rtdbOrdersAdmin, ...fsOrdersAdmin };
+            renderOrdersTable(allOrders);
+        }
 
         function loadFirebaseData() {
             // Products
             db.collection('products').onSnapshot(snap => {
+                fsProductsAdmin = {};
                 if (snap && !snap.empty) {
-                    loadedProductsFS = true;
-                    allProducts = {};
                     snap.forEach(doc => {
-                        allProducts[doc.id] = { id: doc.id, ...doc.data() };
-                        allProductsData[doc.id] = { id: doc.id, ...doc.data() };
+                        fsProductsAdmin[doc.id] = { id: doc.id, ...doc.data() };
                     });
-                    document.getElementById('statProducts').innerText = Object.keys(allProducts).length;
-                    document.getElementById('productsCount').innerText = Object.keys(allProducts).length + ' منتج';
-                    renderProductsList(allProducts);
-                } else if (!loadedProductsFS) {
-                    listenToRTDBProductsAdmin();
                 }
+                mergeAndRenderAdminProducts();
+                listenToRTDBProductsAdmin();
             }, error => {
                 console.warn("Firestore products error, fallback to RTDB:", error);
                 listenToRTDBProductsAdmin();
@@ -1782,20 +1792,21 @@
 
             // Orders
             db.collection('orders').onSnapshot(snap => {
+                fsOrdersAdmin = {};
                 if (snap && !snap.empty) {
-                    loadedOrdersFS = true;
-                    allOrders = {};
                     snap.forEach(doc => {
-                        allOrders[doc.id] = { id: doc.id, ...doc.data() };
+                        fsOrdersAdmin[doc.id] = { id: doc.id, ...doc.data() };
                     });
-                    renderOrdersTable(allOrders);
-                } else if (!loadedOrdersFS) {
-                    listenToRTDBOrdersAdmin();
                 }
+                mergeAndRenderAdminOrders();
+                listenToRTDBOrdersAdmin();
             }, error => {
                 console.warn("Firestore orders error, fallback to RTDB:", error);
                 listenToRTDBOrdersAdmin();
             });
+
+            // Auto sync missing items from RTDB into Firestore
+            setTimeout(autoSyncRTDBToFirestoreSilent, 2000);
         }
 
         let rtdbProductsAdminListening = false;
@@ -1803,13 +1814,12 @@
             if (rtdbProductsAdminListening) return;
             rtdbProductsAdminListening = true;
             rtdb.ref('products').on('value', snap => {
-                if (!loadedProductsFS) {
-                    allProducts = snap.val() || {};
-                    Object.keys(allProducts).forEach(k => allProductsData[k] = allProducts[k]);
-                    document.getElementById('statProducts').innerText = Object.keys(allProducts).length;
-                    document.getElementById('productsCount').innerText = Object.keys(allProducts).length + ' منتج';
-                    renderProductsList(allProducts);
-                }
+                const data = snap.val() || {};
+                rtdbProductsAdmin = {};
+                Object.entries(data).forEach(([k, p]) => {
+                    rtdbProductsAdmin[k] = { id: k, ...p };
+                });
+                mergeAndRenderAdminProducts();
             });
         }
 
@@ -1818,11 +1828,44 @@
             if (rtdbOrdersAdminListening) return;
             rtdbOrdersAdminListening = true;
             rtdb.ref('orders').on('value', snap => {
-                if (!loadedOrdersFS) {
-                    allOrders = snap.val() || {};
-                    renderOrdersTable(allOrders);
-                }
+                const data = snap.val() || {};
+                rtdbOrdersAdmin = {};
+                Object.entries(data).forEach(([k, o]) => {
+                    rtdbOrdersAdmin[k] = { id: k, ...o };
+                });
+                mergeAndRenderAdminOrders();
             });
+        }
+
+        async function autoSyncRTDBToFirestoreSilent() {
+            try {
+                const prodSnap = await rtdb.ref('products').once('value');
+                const prods = prodSnap.val() || {};
+                const keys = Object.keys(prods);
+                if (!keys.length) return;
+                
+                const batch = db.batch();
+                let count = 0;
+                keys.forEach(k => {
+                    if (!fsProductsAdmin[k]) {
+                        batch.set(db.collection('products').doc(k), prods[k], { merge: true });
+                        count++;
+                    }
+                });
+                
+                const heroSnap = await rtdb.ref('settings/heroVideo').once('value');
+                if (heroSnap.exists() && heroSnap.val() && !fsHeroVideoUrl) {
+                    batch.set(db.collection('settings').doc('heroVideo'), { url: heroSnap.val() }, { merge: true });
+                    count++;
+                }
+                
+                if (count > 0) {
+                    await batch.commit();
+                    console.log(`[Auto-Sync] Synced ${count} missing items from RTDB to Firestore.`);
+                }
+            } catch (e) {
+                console.warn("[Auto-Sync] Silent sync notice:", e);
+            }
         }
 
         async function syncRTDBToFirestore() {
@@ -2253,22 +2296,35 @@
 
         // ══════ HERO VIDEO MANAGEMENT ══════
         let currentHeroVideoUrl = '';
+        let fsHeroVideoUrl = null;
+        let rtdbHeroVideoUrl = null;
+
+        function updateAdminHeroVideoUI() {
+            const url = fsHeroVideoUrl || rtdbHeroVideoUrl || '';
+            currentHeroVideoUrl = url;
+            updateHeroVideoPreview(url);
+        }
+
+        let rtdbHeroVideoAdminListening = false;
+        function listenToRTDBHeroVideoAdmin() {
+            if (rtdbHeroVideoAdminListening) return;
+            rtdbHeroVideoAdminListening = true;
+            rtdb.ref('settings/heroVideo').on('value', snap => {
+                rtdbHeroVideoUrl = snap.val() || null;
+                updateAdminHeroVideoUI();
+            });
+        }
 
         db.collection('settings').doc('heroVideo').onSnapshot(doc => {
-            if (doc.exists && doc.data().url) {
-                currentHeroVideoUrl = doc.data().url;
-                updateHeroVideoPreview(currentHeroVideoUrl);
+            if (doc.exists && doc.data() && doc.data().url) {
+                fsHeroVideoUrl = doc.data().url;
             } else {
-                rtdb.ref('settings/heroVideo').on('value', snap => {
-                    currentHeroVideoUrl = snap.val() || '';
-                    updateHeroVideoPreview(currentHeroVideoUrl);
-                });
+                fsHeroVideoUrl = null;
             }
+            updateAdminHeroVideoUI();
+            listenToRTDBHeroVideoAdmin();
         }, () => {
-            rtdb.ref('settings/heroVideo').on('value', snap => {
-                currentHeroVideoUrl = snap.val() || '';
-                updateHeroVideoPreview(currentHeroVideoUrl);
-            });
+            listenToRTDBHeroVideoAdmin();
         });
 
         function updateHeroVideoPreview(url) {
